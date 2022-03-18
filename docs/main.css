@@ -71,7 +71,7 @@ table.all-c th>span {
 }
 
 div.right {
-  margin-left: 200px;
+  margin: auto;
   text-align: center;
   width: 60%;
   min-width: 850px;
@@ -176,6 +176,8 @@ div.page_2 {
 div.search-div {
   text-align: left;
   padding: 5px 10px;
+  width: 840px;
+  margin: auto;
 }
 
 input.search {
