@@ -91,8 +91,8 @@ const replaceText = (text: string): string => {
 };
 
 // 获取角色别名 https://github.com/Ice-Cirno/HoshinoBot/blob/master/hoshino/modules/priconne/_pcr_data.py
-// const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
-const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
+const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
+// const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
   .then((response) => {
     if (response.status === 200 && response.data) {
       return (response.data.match(/CHARA_NAME = (\{[\w\W]+?\}\n\n)/)?.[1].split(/\n+/) as Array<string>).map((e) => {
@@ -127,6 +127,13 @@ const replaceName = async (html: string, nameData: Array<Array<string>>): Promis
     return element;
   });
   return $('body').html() as string;
+};
+// 替换图片链接为CDN连接
+const replacePicCdn = (html: string): string => {
+  const $ = load(html);
+  $('img[data-src]').map((i, e) => $(e).attr('data-src', ($(e).attr('data-src') as string)
+    .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
+  return $.html() as string;
 };
 
 const downloadFile = async (url: string, fileDir: string): Promise<void> => {
@@ -179,13 +186,13 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData
       );
       const html2 = await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), nameData);
-      fs.writeFileSync('docs/raw.html', fs.readFileSync('template.html').toString()
+      fs.writeFileSync('docs/raw.html', replacePicCdn(fs.readFileSync('template.html').toString()
         .replace('__HTML__', html)
         .replace('__HTML2__', html2)
         .replace('__NAMEDATA__', JSON.stringify(nameData))
         .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
         .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
-        .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss')));
+        .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
       downloadPic(html + html2);
     }
   });

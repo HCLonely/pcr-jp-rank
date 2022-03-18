@@ -123,6 +123,13 @@ const replaceName = async (html, nameData) => {
     });
     return $('body').html();
 };
+// 替换图片链接为CDN连接
+const replacePicCdn = (html) => {
+    const $ = (0, cheerio_1.load)(html);
+    $('img[data-src]').map((i, e) => $(e).attr('data-src', $(e).attr('data-src')
+        .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
+    return $.html();
+};
 const downloadFile = async (url, fileDir) => {
     const filepath = path.resolve(fileDir, url.replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', ''));
     if (fs.existsSync(filepath)) {
@@ -169,13 +176,13 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc') +
             formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData);
         const html2 = await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), nameData);
-        fs.writeFileSync('docs/raw.html', fs.readFileSync('template.html').toString()
+        fs.writeFileSync('docs/raw.html', replacePicCdn(fs.readFileSync('template.html').toString()
             .replace('__HTML__', html)
             .replace('__HTML2__', html2)
             .replace('__NAMEDATA__', JSON.stringify(nameData))
             .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
             .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
-            .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss')));
+            .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
         downloadPic(html + html2);
     }
 });
