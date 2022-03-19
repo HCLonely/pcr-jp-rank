@@ -35,5 +35,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
           if [ -n "$(git status -s)" ];then
-            echo 1
+            cdnChanged=$(git status -s | grep -e "docs/cdn/")
+            cd docs
+            git init
+            git add -A
+            git commit -m "Daily Sync"
+            git push -u "https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git" HEAD:gh-pages --force
           fi
