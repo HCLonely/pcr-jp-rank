@@ -31,7 +31,7 @@ jobs:
           TZ: Asia/Shanghai
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          if [ -n "$(git status -s)" ];then
+          if [ "$(git status -s)" != "" ];then
             cdnChanged=$(git status -s | grep -e "docs/cdn/")
             git add .
             git commit -m "Daily Sync"
