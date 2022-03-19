@@ -34,7 +34,15 @@ jobs:
           TZ: Asia/Shanghai
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          if [ -n "$(git status -s)" ];then
-            cdnChanged=$(git status -s | grep -e "docs/cdn/")
-            echo $cdnChanged
+          cdnChanged=$(git status -s | grep -e "docs/cdn/")
+          if [ "$cdnChanged" != "" ];then
+            git add .
+            git commit -m "Daily Sync"
+            git tag -a $version -m "update"
+            git push origin $version
           fi
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
