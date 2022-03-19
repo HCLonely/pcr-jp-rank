@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const { GITHUB_TOKEN } = process.env;
 const gitSpawn = (param1, param2, param3) => {
-  const [, stdout, stderr] = spawnSync(param1, param2, param3);
+  const [, stdout, stderr] = spawnSync(param1, param2, param3).output;
   return `stdout:
 ${stdout.toString()}
 
