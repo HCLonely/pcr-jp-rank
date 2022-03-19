@@ -41,5 +41,4 @@ jobs:
               git tag -a $version -m "update"
               git push origin $version
             fi
-            node src/pushDocs.js
           fi
