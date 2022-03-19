@@ -205,7 +205,8 @@ div.top:hover {
   opacity: 1;
 }
 
-div.about a {
+div.about a,
+a.unit-link {
   text-decoration: none;
   color: #0072ff;
 }

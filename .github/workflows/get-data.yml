@@ -33,5 +33,5 @@ jobs:
           if [ -n "$(git status -s)" ];then
             git add .
             git commit -m "Daily Sync"
-            git push origin master
+            git push origin main
           fi

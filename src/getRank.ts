@@ -28,7 +28,15 @@ const formatHtml = (html: string, title: string, className: string): string => {
       .removeAttr('data-use-lazyload')
       .attr('width', '50px')
       .attr('height', '50px')
-      .after(`<br/>${(className === 'new' && index % 8 !== 0 && !element.text()) ? ' ' : ''}`);
+      .after(`<br/>${(className === 'new' && index % 8 !== 0 && !element.text()) ? ' ' : ''}`)
+      .map((i, e) => {
+        if (!$(e).attr('data-src') && $(e).attr('src')) {
+          $(e).attr('data-src', $(e).attr('src'))
+            .attr('src', './img/unknown.jpg')
+            .addClass('js-lazyload-fixed-size-img');
+        }
+        return e;
+      });
     return null;
   });
   $('table').addClass(className)
@@ -81,7 +89,7 @@ const tablePlus = (rootHtml:string, ...htmls: Array<string>) => {
 
 // 部分文本替换
 const replaceText = (text: string): string => {
-  for (const [reg, value] of Object.entries(textMap)) {
+  for (const [reg, value] of textMap) {
     if (new RegExp(reg, 'g').test(text)) {
       // eslint-disable-next-line no-param-reassign
       text = text.replace(new RegExp(reg, 'g'), value as string);
@@ -91,8 +99,8 @@ const replaceText = (text: string): string => {
 };
 
 // 获取角色别名 https://github.com/Ice-Cirno/HoshinoBot/blob/master/hoshino/modules/priconne/_pcr_data.py
-const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
-// const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
+// const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
+const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
   .then((response) => {
     if (response.status === 200 && response.data) {
       return (response.data.match(/CHARA_NAME = (\{[\w\W]+?\}\n\n)/)?.[1].split(/\n+/) as Array<string>).map((e) => {
@@ -128,12 +136,90 @@ const replaceName = async (html: string, nameData: Array<Array<string>>): Promis
   });
   return $('body').html() as string;
 };
+// JJC角色名替换为中文
+const replaceJjcName = async (html: string, nameData: Array<Array<string>>): Promise<string> => {
+  const $ = load(html);
+  $('td').has('img[data-src]')
+    .map((index, element) => {
+      if (!$(element).text() && $(element).find('img[data-src]').length > 1) {
+        $(element).find('img[data-src]')
+          .map((i, e) => {
+            const nameJp = $(e).attr('alt')
+              ?.trim()
+              ?.replace(/＆/g, '&');
+            if (!nameJp) return e;
+            const nameArr = nameData.find((e) => e.includes(nameJp));
+            if (nameArr) {
+              $(e).attr('alt', nameArr[0]);
+            }
+            return e;
+          });
+      }
+      return element;
+    });
+  return $('body').html() as string;
+};
 // 替换图片链接为CDN连接
 const replacePicCdn = (html: string): string => {
   const $ = load(html);
   $('img[data-src]').map((i, e) => $(e).attr('data-src', ($(e).attr('data-src') as string)
     .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
   return $.html() as string;
+};
+// 添加角色详情链接
+interface unitObj {
+  atkType: number
+  comment: string
+  cutin1_Star6: number
+  guildId: number
+  icon: string
+  rarity: number
+  searchAreaWidth: number
+  unitId: number
+  unitName: string
+}
+const addLink = async (html: string, nameData: Array<Array<string>>): Promise<string> => {
+  const userData: Array<unitObj> = await axios.get('https://pcr.satroki.tech/api/Unit/GetUnitDatas?s=jp').then((response) => response.data);
+  if (!userData) {
+    throw 'Get User Data Failed!';
+  }
+  const unitIds = userData.map((unit) => {
+    const matched = nameData.find((e) => e.includes(unit.unitName.replace(/（/g, '(').replace(/）/g, ')')
+      .replace(/＆/g, '&')));
+    if (!matched) {
+      return null;
+    }
+    return {
+      id: unit.unitId,
+      names: matched
+    };
+  });
+  const $ = load(html);
+  $('td').has('img[data-src]')
+    .map((index, element) => {
+      const img = $(element).find('img[data-src]');
+      if (img.length > 1) {
+        img.map((i, e) => {
+          const id = unitIds.find((unit) => unit?.names?.includes($(e).attr('alt') as string))?.id;
+          if (id) {
+            $(e).attr('title', $(e).attr('alt'))
+              .wrap(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank"></a>`);
+          }
+          return e;
+        });
+      } else if (img.length === 1) {
+        const name = img.attr('alt') || $(element).text()
+          .trim();
+        if (!name) return element;
+        const id = unitIds.find((unit) => unit?.names?.includes(name.replace('(6⭐)', '')))?.id;
+        if (id) {
+          img.attr('alt', name).attr('title', name);
+          $(element).html(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank">${$(element).html()}</a>`);
+        }
+      }
+      return element;
+    });
+  return $('body').html() as string;
 };
 
 const downloadFile = async (url: string, fileDir: string): Promise<void> => {
@@ -178,14 +264,25 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
       const jjcHtml = replaceText($('div.puri_rank123-table').html() as string);
       const hitiranHtml = replaceText($('div.puri_hitiran-table').html() as string);
       const updateTime = $('time[datetime]').attr('datetime');
-      const html = await replaceName(
-        formatHtml(newtiHtml, '新角色评价', 'new') +
-        formatHtml(tablePlus(allRank1Html, allRank2Html), '综合排行榜', 'all') +
-        formatHtml(questHtml, '推图排行榜', 'quest') +
-        formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc') +
-        formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData
+      const html = await addLink(
+        await replaceName(
+          formatHtml(newtiHtml, '新角色评价', 'new') +
+          formatHtml(tablePlus(allRank1Html, allRank2Html), '综合排行榜', 'all') +
+          formatHtml(questHtml, '推图排行榜', 'quest'), nameData) +
+          await replaceJjcName(
+            formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), nameData
+          ) +
+          await replaceName(
+            formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData
+          ), nameData
       );
-      const html2 = await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), nameData);
+      const html2 = await addLink(
+        await replaceName(
+          formatHitiranHtml(
+            formatHtml(hitiranHtml, '全角色一览', 'all-c')
+          ), nameData
+        ), nameData
+      );
       fs.writeFileSync('docs/raw.html', replacePicCdn(fs.readFileSync('template.html').toString()
         .replace('__HTML__', html)
         .replace('__HTML2__', html2)

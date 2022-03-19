@@ -28,7 +28,14 @@ const formatHtml = (html, title, className) => {
             .removeAttr('data-use-lazyload')
             .attr('width', '50px')
             .attr('height', '50px')
-            .after(`<br/>${(className === 'new' && index % 8 !== 0 && !element.text()) ? ' ' : ''}`);
+            .after(`<br/>${(className === 'new' && index % 8 !== 0 && !element.text()) ? ' ' : ''}`)
+            .map((i, e) => {
+            if (!$(e).attr('data-src') && $(e).attr('src')) {
+                $(e).attr('data-src', $(e).attr('src'))
+                    .attr('src', './img/unknown.jpg');
+            }
+            return e;
+        });
         return null;
     });
     $('table').addClass(className)
@@ -79,7 +86,7 @@ const tablePlus = (rootHtml, ...htmls) => {
 };
 // 部分文本替换
 const replaceText = (text) => {
-    for (const [reg, value] of Object.entries(textMap)) {
+    for (const [reg, value] of textMap) {
         if (new RegExp(reg, 'g').test(text)) {
             // eslint-disable-next-line no-param-reassign
             text = text.replace(new RegExp(reg, 'g'), value);
@@ -123,12 +130,81 @@ const replaceName = async (html, nameData) => {
     });
     return $('body').html();
 };
+// JJC角色名替换为中文
+const replaceJjcName = async (html, nameData) => {
+    const $ = (0, cheerio_1.load)(html);
+    $('td').has('img[data-src]')
+        .map((index, element) => {
+        if (!$(element).text() && $(element).find('img[data-src]').length > 1) {
+            $(element).find('img[data-src]')
+                .map((i, e) => {
+                const nameJp = $(e).attr('alt')
+                    ?.trim()
+                    ?.replace(/＆/g, '&');
+                if (!nameJp)
+                    return e;
+                const nameArr = nameData.find((e) => e.includes(nameJp));
+                if (nameArr) {
+                    $(e).attr('alt', nameArr[0]);
+                }
+                return e;
+            });
+        }
+        return element;
+    });
+    return $('body').html();
+};
 // 替换图片链接为CDN连接
 const replacePicCdn = (html) => {
     const $ = (0, cheerio_1.load)(html);
     $('img[data-src]').map((i, e) => $(e).attr('data-src', $(e).attr('data-src')
         .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
     return $.html();
+};
+const addLink = async (html, nameData) => {
+    const userData = await axios_1.default.get('https://pcr.satroki.tech/api/Unit/GetUnitDatas?s=jp').then((response) => response.data);
+    if (!userData) {
+        throw 'Get User Data Failed!';
+    }
+    const unitIds = userData.map((unit) => {
+        const matched = nameData.find((e) => e.includes(unit.unitName.replace(/（/g, '(').replace(/）/g, ')')
+            .replace(/＆/g, '&')));
+        if (!matched) {
+            return null;
+        }
+        return {
+            id: unit.unitId,
+            names: matched
+        };
+    });
+    const $ = (0, cheerio_1.load)(html);
+    $('td').has('img[data-src]')
+        .map((index, element) => {
+        const img = $(element).find('img[data-src]');
+        if (img.length > 1) {
+            img.map((i, e) => {
+                const id = unitIds.find((unit) => unit?.names?.includes($(e).attr('alt')))?.id;
+                if (id) {
+                    $(e).attr('title', $(e).attr('alt'))
+                        .wrap(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank"></a>`);
+                }
+                return e;
+            });
+        }
+        else if (img.length === 1) {
+            const name = img.attr('alt') || $(element).text()
+                .trim();
+            if (!name)
+                return element;
+            const id = unitIds.find((unit) => unit?.names?.includes(name))?.id;
+            if (id) {
+                img.attr('alt', name).attr('title', name);
+                $(element).html(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank">${$(element).html()}</a>`);
+            }
+        }
+        return element;
+    });
+    return $('body').html();
 };
 const downloadFile = async (url, fileDir) => {
     const filepath = path.resolve(fileDir, url.replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', ''));
@@ -170,12 +246,12 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
         const jjcHtml = replaceText($('div.puri_rank123-table').html());
         const hitiranHtml = replaceText($('div.puri_hitiran-table').html());
         const updateTime = $('time[datetime]').attr('datetime');
-        const html = await replaceName(formatHtml(newtiHtml, '新角色评价', 'new') +
+        const html = await addLink(await replaceName(formatHtml(newtiHtml, '新角色评价', 'new') +
             formatHtml(tablePlus(allRank1Html, allRank2Html), '综合排行榜', 'all') +
-            formatHtml(questHtml, '推图排行榜', 'quest') +
-            formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc') +
-            formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData);
-        const html2 = await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), nameData);
+            formatHtml(questHtml, '推图排行榜', 'quest'), nameData) +
+            await replaceJjcName(formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), nameData) +
+            await replaceName(formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData), nameData);
+        const html2 = await addLink(await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), nameData), nameData);
         fs.writeFileSync('docs/raw.html', replacePicCdn(fs.readFileSync('template.html').toString()
             .replace('__HTML__', html)
             .replace('__HTML2__', html2)
