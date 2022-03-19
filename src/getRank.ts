@@ -307,8 +307,9 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         .includes('docs/cdn/')) {
         const version = new Date().getTime();
         fs.writeFileSync('./docs/cdn/version', `${version}`);
-        fs.writeFileSync('./docs/raw.html', fs.readFileSync('./docs/raw.html').toString()
-          .replaceAll('@main', `@${version}`));
       }
+      fs.writeFileSync('./docs/raw.html', fs.readFileSync('./docs/raw.html').toString()
+        .replaceAll('@main', `@${fs.readFileSync('./docs/cdn/version').toString()
+          .trim()}`));
     }
   });
