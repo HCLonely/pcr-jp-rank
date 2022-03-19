@@ -18,8 +18,9 @@ console.log(gitSpawn('git', ['add', '.']));
 console.log(gitSpawn('git', ['commit', '-m', 'Daily Sync']));
 console.log(gitSpawn('git', ['push', 'origin', 'main']));
 
-if (gitStatus.includes('docs/cdn/')) {
-  const version = fs.readFileSync('docs/cdn/version').toString();
+const version = fs.readFileSync('docs/cdn/version').toString()
+  .trim();
+if (!execSync(`git tag -l "${version}"`).toString()) {
   console.log(gitSpawn('git', ['add', '.']));
   console.log(gitSpawn('git', ['tag', '-a', version, '-m', 'update']));
   console.log(gitSpawn('git', ['push', 'origin', version]));
