@@ -3,6 +3,7 @@ import * as path from 'path';
 import axios from 'axios';
 import { load } from 'cheerio';
 import * as dayjs from 'dayjs';
+import { execSync } from 'child_process';
 
 const textMap = JSON.parse(fs.readFileSync('text-map.json').toString());
 
@@ -290,6 +291,10 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
         .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
         .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
-      downloadPic(html + html2);
+      await downloadPic(html + html2);
+      if (execSync('git status -s').toString()
+        .includes('docs/cdn/')) {
+        fs.writeFileSync('./docs/cdn/version', `${new Date().getTime()}`);
+      }
     }
   });

@@ -32,7 +32,8 @@ const formatHtml = (html, title, className) => {
             .map((i, e) => {
             if (!$(e).attr('data-src') && $(e).attr('src')) {
                 $(e).attr('data-src', $(e).attr('src'))
-                    .attr('src', './img/unknown.jpg');
+                    .attr('src', './img/unknown.jpg')
+                    .addClass('js-lazyload-fixed-size-img');
             }
             return e;
         });
@@ -196,7 +197,7 @@ const addLink = async (html, nameData) => {
                 .trim();
             if (!name)
                 return element;
-            const id = unitIds.find((unit) => unit?.names?.includes(name))?.id;
+            const id = unitIds.find((unit) => unit?.names?.includes(name.replace('(6⭐)', '')))?.id;
             if (id) {
                 img.attr('alt', name).attr('title', name);
                 $(element).html(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank">${$(element).html()}</a>`);
