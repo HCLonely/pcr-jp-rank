@@ -35,8 +35,8 @@ jobs:
         run: |
           cdnChanged=$(git status -s | grep -e "docs/cdn/")
           if [ "$cdnChanged" != "" ];then
+            version=$(cat docs/cdn/version)
             git add .
-            git commit -m "Daily Sync"
             git tag -a $version -m "update"
             git push origin $version
           fi
