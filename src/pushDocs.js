@@ -7,7 +7,6 @@ const gitSpawn = (param1, param2, param3) => {
   const [, stdout, stderr] = spawnSync(param1, param2, param3).output;
   return `stdout:
 ${stdout.toString()}
-
 stderr:
 ${stderr.toString()}`;
 };
