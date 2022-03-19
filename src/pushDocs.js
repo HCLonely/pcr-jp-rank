@@ -30,25 +30,5 @@ if (gitStatus.includes('docs/')) {
   console.log(gitSpawn('git', ['init'], { cwd: 'docs' }));
   console.log(gitSpawn('git', ['add', '-A'], { cwd: 'docs' }));
   console.log(gitSpawn('git', ['commit', '-m', 'Daily Sync'], { cwd: 'docs' }));
-  console.log(gitSpawn('git', ['push', '-u', `"https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git"`, 'HEAD:gh-pages', '--force'], { cwd: 'docs' })); // eslint-disable-line
+  console.log(gitSpawn('git', ['push', '-u', `https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git`, 'HEAD:gh-pages', '--force'], { cwd: 'docs' })); // eslint-disable-line
 }
-
-/*
-spawn('git', ['add', '.'])
-  .then(() => spawn('git', ['commit', '-m', 'Daily Sync']))
-  .then(() => spawn('git', ['push', 'origin', 'main']));
-
-if (gitStatus.includes('docs/cdn/')) {
-  const version = fs.readFileSync('docs/cdn/version').toString();
-  spawn('git', ['add', '.'])
-    .then(() => spawn('git', ['tag', '-a', version, '-m', 'update']))
-    .then(() => spawn('git', ['push', 'origin', version]));
-}
-
-if (gitStatus.includes('docs/')) {
-  spawn('git', ['init'], { cwd: 'docs' })
-    .then(() => spawn('git', ['add', '-A'], { cwd: 'docs' }))
-    .then(() => spawn('git', ['commit', '-m', 'Daily Sync'], { cwd: 'docs' }))
-    .then(() => spawn('git', ['push', '-u', `"https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git"`, 'HEAD:gh-pages', '--force'], { cwd: 'docs' })); // eslint-disable-line
-}
-*/
