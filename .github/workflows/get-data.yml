@@ -35,10 +35,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
           if [ -n "$(git status -s)" ];then
-            cdnChanged=$(git status -s | grep -e "docs/cdn/")
-            if [ "$cdnChanged" != "" ];then
-              version=$(cat docs/cdn/version)
-              git tag -a $version -m "update"
-              git push origin $version
-            fi
+            echo 1
           fi
