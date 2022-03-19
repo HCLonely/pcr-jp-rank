@@ -43,8 +43,7 @@ jobs:
             fi
             cd docs
             git init
-            git checkout -b gh-pages
-            git add .
+            git add -A
             git commit -m "Daily Sync"
-            git push -u "https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/blog.hclonely.com.git" HEAD:gh-pages --force
+            git push -u "https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git" HEAD:gh-pages --force
           fi
