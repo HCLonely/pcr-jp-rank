@@ -41,9 +41,5 @@ jobs:
               git tag -a $version -m "update"
               git push origin $version
             fi
-            cd docs
-            git init
-            git add -A
-            git commit -m "Daily Sync"
-            git push -u "https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git" HEAD:gh-pages --force
+            node src/pushDocs.js
           fi
