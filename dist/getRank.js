@@ -5,6 +5,7 @@ const path = require("path");
 const axios_1 = require("axios");
 const cheerio_1 = require("cheerio");
 const dayjs = require("dayjs");
+const child_process_1 = require("child_process");
 const textMap = JSON.parse(fs.readFileSync('text-map.json').toString());
 // 格式化Html
 const formatHtml = (html, title, className) => {
@@ -260,6 +261,10 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
             .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
             .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
-        downloadPic(html + html2);
+        await downloadPic(html + html2);
+        if ((0, child_process_1.execSync)('git status -s').toString()
+            .includes('docs/cdn/')) {
+            fs.writeFileSync('./docs/cdn/version', `${new Date().getTime()}`);
+        }
     }
 });
