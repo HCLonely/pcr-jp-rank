@@ -34,7 +34,7 @@ jobs:
             git add .
             git commit -m "Daily Sync"
             git push origin main
-            if [git status -s | grep -e "docs/cdn/"];then
+            if git status -s | grep -e "docs/cdn/";then
               version=$(cat docs/cdn/version)
               git tag -a $version
               git push origin $version
