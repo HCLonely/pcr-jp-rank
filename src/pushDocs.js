@@ -7,22 +7,22 @@ const { GITHUB_TOKEN } = process.env;
 const gitStatus = execSync('git status -s').toString();
 
 if (!gitStatus) return;
-spawnSync('git', ['add', '.']);
-spawnSync('git', ['commit', '-m', 'Daily Sync']);
-spawnSync('git', ['push', 'origin', 'main']);
+console.log(spawnSync('git', ['add', '.']).output);
+console.log(spawnSync('git', ['commit', '-m', 'Daily Sync']).output);
+console.log(spawnSync('git', ['push', 'origin', 'main']).output);
 
 if (gitStatus.includes('docs/cdn/')) {
   const version = fs.readFileSync('docs/cdn/version').toString();
-  spawnSync('git', ['add', '.']);
-  spawnSync('git', ['tag', '-a', version, '-m', 'update']);
-  spawnSync('git', ['push', 'origin', version]);
+  console.log(spawnSync('git', ['add', '.']).output);
+  console.log(spawnSync('git', ['tag', '-a', version, '-m', 'update']).output);
+  console.log(spawnSync('git', ['push', 'origin', version]).output);
 }
 
 if (gitStatus.includes('docs/')) {
-  spawnSync('git', ['init'], { cwd: 'docs' });
-  spawnSync('git', ['add', '-A'], { cwd: 'docs' });
-  spawnSync('git', ['commit', '-m', 'Daily Sync'], { cwd: 'docs' });
-  spawnSync('git', ['push', '-u', `"https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git"`, 'HEAD:gh-pages', '--force'], { cwd: 'docs' }); // eslint-disable-line
+  console.log(spawnSync('git', ['init'], { cwd: 'docs' }).output);
+  console.log(spawnSync('git', ['add', '-A'], { cwd: 'docs' }).output);
+  console.log(spawnSync('git', ['commit', '-m', 'Daily Sync'], { cwd: 'docs' }).output);
+  console.log(spawnSync('git', ['push', '-u', `"https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git"`, 'HEAD:gh-pages', '--force'], { cwd: 'docs' }).output); // eslint-disable-line
 }
 
 /*
