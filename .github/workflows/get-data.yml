@@ -30,21 +30,4 @@ jobs:
         env:
           TZ: Asia/Shanghai
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        run: |
-          if [ "$(git status -s)" != "" ];then
-            cdnChanged=$(git status -s | grep -e "docs/cdn/")
-            echo $cdnChanged
-            git add .
-            git commit -m "Daily Sync"
-            git push origin main
-            if [ "$cdnChanged" != "" ];then
-              version=$(cat docs/cdn/version)
-              git tag -a $version -m "update"
-              git push origin $version
-            fi
-            cd docs
-            git init
-            git add -A
-            git commit -m "Daily Sync"
-            git push -u "https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git" HEAD:gh-pages --force
-          fi
+        run: node src/pushDocs.js

@@ -1,32 +1,27 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
+const fs = require('fs');
 
 const { GITHUB_TOKEN } = process.env;
 
-function git(...args) {
-  return spawn('git', args, {
-    cwd: 'docs',
-    verbose: true,
-    stdio: 'inherit'
-  });
+const gitStatus = execSync('git status -s').toString();
+
+if (!gitStatus) return;
+
+spawn('git', ['add', '.'])
+  .then(() => spawn('git', ['commit', '-m', 'Daily Sync']))
+  .then(() => spawn('git', ['push', 'origin', 'main']));
+
+if (gitStatus.includes('docs/cdn/')) {
+  const version = fs.readFileSync('docs/cdn/version').toString();
+  spawn('git', ['add', '.'])
+    .then(() => spawn('git', ['tag', '-a', version, '-m', 'update']))
+    .then(() => spawn('git', ['push', 'origin', version]));
 }
 
-function setup() {
-  const userName = 'github-actions[bot]';
-  const userEmail = '41898282+github-actions[bot]@users.noreply.github.com';
-
-  // Create a placeholder for the first commit
-  return git('init').then(() => userName && git('config', 'user.name', userName))
-    .then(() => userEmail && git('config', 'user.email', userEmail))
-    .then(() => git('add', '-A'))
-    .then(() => git('commit', '-m', 'Daily Sync'));
+if (gitStatus.includes('docs/')) {
+  spawn('git', ['init'], { cwd: 'docs' })
+    .then(() => spawn('git', ['add', '-A'], { cwd: 'docs' }))
+    .then(() => spawn('git', ['commit', '-m', 'Daily Sync'], { cwd: 'docs' }))
+    .then(() => spawn('git', ['push', '-u', `"https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git"`, 'HEAD:gh-pages', '--force'], { cwd: 'docs' })); // eslint-disable-line
 }
-
-function push() {
-  return git('add', '-A').then(() => git('commit', '-m', 'Daily Sync').catch(() => {
-    // Do nothing. It's OK if nothing to commit.
-  }))
-    .then(() => git('push', '-u', `"https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git"`, 'HEAD:gh-pages', '--force'));
-}
-
-setup().then(() => push());
