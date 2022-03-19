@@ -264,7 +264,10 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
         await downloadPic(html + html2);
         if ((0, child_process_1.execSync)('git status -s').toString()
             .includes('docs/cdn/')) {
-            fs.writeFileSync('./docs/cdn/version', `${new Date().getTime()}`);
+            const version = new Date().getTime();
+            fs.writeFileSync('./docs/cdn/version', `${version}`);
+            fs.writeFileSync('./docs/raw.html', fs.readFileSync('./docs/raw.html').toString()
+                .replaceAll('@main', `@${version}`));
         }
     }
 });
