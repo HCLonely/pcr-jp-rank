@@ -31,10 +31,11 @@ jobs:
           TZ: Asia/Shanghai
         run: |
           if [ -n "$(git status -s)" ];then
+            cdnChanged=$(git status -s | grep -e "docs/cdn/")
             git add .
             git commit -m "Daily Sync"
             git push origin main
-            if [ git status -s | grep -e "docs/cdn/" ];then
+            if [ "$cdnChanged" != "" ];then
               version=$(cat docs/cdn/version)
               git tag -a $version -m "update"
               git push origin $version
