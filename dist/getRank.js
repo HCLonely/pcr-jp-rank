@@ -5,7 +5,11 @@ const path = require("path");
 const axios_1 = require("axios");
 const cheerio_1 = require("cheerio");
 const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
 const child_process_1 = require("child_process");
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const textMap = JSON.parse(fs.readFileSync('text-map.json').toString());
 // 格式化Html
 const formatHtml = (html, title, className) => {
@@ -260,8 +264,10 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             .replace('__HTML2__', html2)
             .replace('__NAMEDATA__', JSON.stringify(nameData))
             .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
-            .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
-            .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
+            .replace('__UPDATETIME__', dayjs(updateTime).tz('Asia/Shanghai')
+            .format('YYYY-MM-DD HH:mm:ss'))
+            .replace('__SYNCTIME__', dayjs().tz('Asia/Shanghai')
+            .format('YYYY-MM-DD HH:mm:ss'))));
         for (let i = 0; i < 5; i++) { // eslint-disable-line
             if ((await downloadPic(html + html2)).filter((e) => !e).length === 0)
                 break;
