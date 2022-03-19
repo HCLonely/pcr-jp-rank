@@ -221,9 +221,9 @@ const downloadFile = async (url, fileDir) => {
         responseType: 'stream'
     });
     response.data.pipe(writer);
-    return new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
+    return new Promise((resolve) => {
+        writer.on('finish', () => { resolve(true); });
+        writer.on('error', () => { resolve(false); });
     });
 };
 // 下载图片
@@ -262,7 +262,10 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
             .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
             .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
-        console.log((await downloadPic(html + html2)).filter((e) => !e)); // .catch(e => );
+        for (let i = 0; i < 5; i++) { // eslint-disable-line
+            if ((await downloadPic(html + html2)).filter((e) => !e).length === 0)
+                break;
+        }
         if ((0, child_process_1.execSync)('git status -s').toString()
             .includes('docs/cdn/')) {
             const version = new Date().getTime();
