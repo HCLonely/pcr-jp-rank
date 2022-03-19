@@ -3,7 +3,12 @@ import * as path from 'path';
 import axios from 'axios';
 import { load } from 'cheerio';
 import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
 import { execSync } from 'child_process';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const textMap = JSON.parse(fs.readFileSync('text-map.json').toString());
 
@@ -291,8 +296,10 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         .replace('__HTML2__', html2)
         .replace('__NAMEDATA__', JSON.stringify(nameData))
         .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
-        .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
-        .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
+        .replace('__UPDATETIME__', dayjs(updateTime).tz('Asia/Shanghai')
+          .format('YYYY-MM-DD HH:mm:ss'))
+        .replace('__SYNCTIME__', dayjs().tz('Asia/Shanghai')
+          .format('YYYY-MM-DD HH:mm:ss'))));
       for (let i = 0; i < 5; i++) { // eslint-disable-line
         if ((await downloadPic(html + html2)).filter((e) => !e).length === 0) break;
       }

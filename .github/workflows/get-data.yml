@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 10,22 * * *'
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -32,9 +35,10 @@ jobs:
         run: |
           if [ -n "$(git status -s)" ];then
             cdnChanged=$(git status -s | grep -e "docs/cdn/")
+            git checkout -b gh-pages
             git add .
             git commit -m "Daily Sync"
-            git push origin main
+            git push origin gh-pages --force
             if [ "$cdnChanged" != "" ];then
               version=$(cat docs/cdn/version)
               git tag -a $version -m "update"
