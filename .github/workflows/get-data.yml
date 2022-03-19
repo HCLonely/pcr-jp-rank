@@ -33,15 +33,17 @@ jobs:
         env:
           TZ: Asia/Shanghai
         run: |
-          cdnChanged=$(git status -s | grep -e "docs/cdn/")
-          if [ "$cdnChanged" != "" ];then
-            version=$(cat docs/cdn/version)
-            git add .
-            git tag -a $version -m "update"
-            git push origin $version
+          if [ -n "$(git status -s)" ];then
+            cdnChanged=$(git status -s | grep -e "docs/cdn/")
+            echo "$cdnChanged"
+            if [ "$cdnChanged" != "" ];then
+              version=$(cat docs/cdn/version)
+              git tag -a $version -m "update"
+              git push origin $version
+            fi
+            cd docs
+            git init
+            git add -A
+            git commit -m "Daily Sync"
+            git push -u "https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git" HEAD:gh-pages --force
           fi
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
