@@ -223,10 +223,11 @@ const addLink = async (html: string, nameData: Array<Array<string>>): Promise<st
   return $('body').html() as string;
 };
 
-const downloadFile = async (url: string, fileDir: string): Promise<void> => {
-  const filepath = path.resolve(fileDir, url.replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', ''));
-  if (fs.existsSync(filepath)) {
-    return;
+const downloadFile = async (url: string, fileDir: string): Promise<boolean> => {
+  const fileName = url.replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', '');
+  const filepath = path.resolve(fileDir, fileName);
+  if (fs.existsSync(filepath) && fs.statSync(filepath).size > 0) {
+    return true;
   }
   const writer = fs.createWriteStream(filepath);
   const response = await axios({
@@ -235,20 +236,21 @@ const downloadFile = async (url: string, fileDir: string): Promise<void> => {
     responseType: 'stream'
   });
   response.data.pipe(writer);
-  return new Promise((resolve, reject) => {
-    writer.on('finish', resolve);
-    writer.on('error', reject);
+  return new Promise((resolve) => {
+    writer.on('finish', () => { resolve(true); });
+    writer.on('error', () => { resolve(false); });
   });
 };
 // 下载图片
-const downloadPic = (html: string) => {
+const downloadPic = (html: string): Promise<Array<boolean>> => {
   const $ = load(html);
   return Promise.all(
     $('img').toArray()
       .map((e) => $(e).attr('data-src'))
       .filter((e) => e)
       .map((e) => downloadFile(e as string, './docs/cdn'))
-  );
+  )
+  ;
 };
 // 获取并保存排行数据
 axios.get('https://gamewith.jp/pricone-re/article/show/93068')
@@ -291,7 +293,9 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
         .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
         .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
-      await downloadPic(html + html2);
+      for (let i = 0; i < 5; i++) { // eslint-disable-line
+        if ((await downloadPic(html + html2)).filter((e) => !e).length === 0) break;
+      }
       if (execSync('git status -s').toString()
         .includes('docs/cdn/')) {
         const version = new Date().getTime();

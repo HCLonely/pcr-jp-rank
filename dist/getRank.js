@@ -209,9 +209,10 @@ const addLink = async (html, nameData) => {
     return $('body').html();
 };
 const downloadFile = async (url, fileDir) => {
-    const filepath = path.resolve(fileDir, url.replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', ''));
-    if (fs.existsSync(filepath)) {
-        return;
+    const fileName = url.replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', '');
+    const filepath = path.resolve(fileDir, fileName);
+    if (fs.existsSync(filepath) && fs.statSync(filepath).size > 0) {
+        return true;
     }
     const writer = fs.createWriteStream(filepath);
     const response = await (0, axios_1.default)({
@@ -261,7 +262,7 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
             .replace('__UPDATETIME__', dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss'))
             .replace('__SYNCTIME__', dayjs().format('YYYY-MM-DD HH:mm:ss'))));
-        await downloadPic(html + html2);
+        console.log((await downloadPic(html + html2)).filter((e) => !e)); // .catch(e => );
         if ((0, child_process_1.execSync)('git status -s').toString()
             .includes('docs/cdn/')) {
             const version = new Date().getTime();
