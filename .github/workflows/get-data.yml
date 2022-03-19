@@ -36,9 +36,5 @@ jobs:
         run: |
           if [ -n "$(git status -s)" ];then
             cdnChanged=$(git status -s | grep -e "docs/cdn/")
-            cd docs
-            git init
-            git add -A
-            git commit -m "Daily Sync"
-            git push -u "https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git" HEAD:gh-pages --force
+            echo $cdnChanged
           fi
