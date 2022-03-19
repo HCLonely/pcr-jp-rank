@@ -32,7 +32,6 @@ jobs:
       - name: Push
         env:
           TZ: Asia/Shanghai
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
           cdnChanged=$(git status -s | grep -e "docs/cdn/")
           if [ "$cdnChanged" != "" ];then
