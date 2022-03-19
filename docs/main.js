@@ -117,6 +117,15 @@ window.onscroll = () => {
     document.getElementById('toTop').style.display = 'none';
   }
 };
+document.querySelectorAll('table.sorttable tbody')[0].onscroll = () => {
+  if (document.body.scrollTop > 20 ||
+    document.documentElement.scrollTop > 20 ||
+    document.querySelectorAll('table.sorttable tbody')[0].scrollTop > 20) {
+    document.getElementById('toTop').style.display = 'block';
+  } else {
+    document.getElementById('toTop').style.display = 'none';
+  }
+};
 function scroll2top() {
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
