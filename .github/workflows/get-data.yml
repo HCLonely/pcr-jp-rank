@@ -29,19 +29,22 @@ jobs:
           node-version: '16.x'
       - run: npm install
       - run: npm start
-      - name: Push Commits
+      - name: Push
         env:
           TZ: Asia/Shanghai
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
           if [ -n "$(git status -s)" ];then
             cdnChanged=$(git status -s | grep -e "docs/cdn/")
-            git checkout -b gh-pages
-            git add .
-            git commit -m "Daily Sync"
-            git push origin gh-pages --force
             if [ "$cdnChanged" != "" ];then
               version=$(cat docs/cdn/version)
               git tag -a $version -m "update"
               git push origin $version
             fi
+            cd docs
+            git init
+            git checkout -b gh-pages
+            git add .
+            git commit -m "Daily Sync"
+            git push -u "https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/blog.hclonely.com.git" HEAD:gh-pages --force
           fi
