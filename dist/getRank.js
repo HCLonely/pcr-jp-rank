@@ -45,7 +45,7 @@ const formatHtml = (html, title, className) => {
         return null;
     });
     $('table').addClass(className)
-        .before(`<div id="${className}"></div><h2>${title}</h2>`);
+        .before(`<div id="${className}" class="anchor-div"></div><h2>${title}</h2>`);
     return $('body').html();
 };
 // 格式化竞技场Html
@@ -65,7 +65,7 @@ const formatJjcHtml = (html, title, className) => {
         .attr('width', '50px')
         .attr('height', '50px');
     $('table').addClass(className)
-        .before(`<div id="${className}"></div><h2>${title}</h2>`);
+        .before(`<div id="${className}" class="anchor-div"></div><h2>${title}</h2>`);
     return $('body').html();
 };
 // 格式化全角色一览Html
@@ -189,10 +189,11 @@ const addLink = async (html, nameData) => {
         const img = $(element).find('img[data-src]');
         if (img.length > 1) {
             img.map((i, e) => {
+                const names = nameData.find((name) => name.includes($(e).attr('alt')));
+                $(e).attr('title', names?.join(' | ') || $(e).attr('alt'));
                 const id = unitIds.find((unit) => unit?.names?.includes($(e).attr('alt')))?.id;
                 if (id) {
-                    $(e).attr('title', $(e).attr('alt'))
-                        .wrap(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank"></a>`);
+                    $(e).wrap(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank"></a>`);
                 }
                 return e;
             });
@@ -202,15 +203,90 @@ const addLink = async (html, nameData) => {
                 .trim();
             if (!name)
                 return element;
+            const names = nameData.find((e) => e.includes(name.replace('(6⭐)', '')));
+            $(element).attr('title', names?.join(' | ') || name)
+                .attr('alt', name);
             const id = unitIds.find((unit) => unit?.names?.includes(name.replace('(6⭐)', '')))?.id;
             if (id) {
-                img.attr('alt', name).attr('title', name);
                 $(element).html(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank">${$(element).html()}</a>`);
             }
         }
         return element;
     });
     return $('body').html();
+};
+// 生成手机页面
+const pc2m = async (html) => {
+    const $ = (0, cheerio_1.load)(html);
+    $('.pc-page table').map((i, ele) => {
+        if ($(ele).hasClass('jjc') || $(ele).hasClass('new') || $(ele).hasClass('all-c')) {
+            return ele;
+        }
+        const data = [];
+        $(ele).find('tr')
+            .map((i, e) => {
+            if ($(e).find('th').length > 0) {
+                data.push([]);
+                return e;
+            }
+            if ($(e).find('a').length > 0) {
+                $(e).find('a')
+                    .map((index, element) => {
+                    const link = $(element).attr('href');
+                    data[data.length - 1].push(`<a class="unit-link" href="${link}" target="_blank">${$(element).find('img')
+                        .prop('outerHTML')}</a>`);
+                    return element;
+                });
+                $(e).remove();
+                return e;
+            }
+            if ($(e).find('img').length > 0) {
+                $(e).find('img')
+                    .map((index, element) => {
+                    data[data.length - 1].push($(element).prop('outerHTML'));
+                    return element;
+                });
+                $(e).remove();
+                return e;
+            }
+            return e;
+        });
+        $(ele).find('tr')
+            .has('th')
+            .map((i, e) => {
+            $(e).find('th')
+                .attr('colspan', '1');
+            $(e).after(`<tr><td>${data[i].join('')}</td></tr>`);
+            return e;
+        });
+        return ele;
+    });
+    $('img').map((i, e) => {
+        if (['D', 'C', 'B', 'A', 'S', 'S+', 'SS', 'SS+'].includes($(e).attr('alt'))) {
+            if ($(e).parent()
+                .text()
+                .trim() === '※暂定') {
+                $(e).parent()
+                    .html(`${$(e).attr('alt')}<br/>※暂定`);
+                return e;
+            }
+            $(e).parent()
+                .html($(e).attr('alt'));
+        }
+        return e;
+    });
+    $('.pc-page .left').html($('.pc-page .left').html()
+        .replace('新角色评价', '新')
+        .replace('综合排行榜', '综合')
+        .replace('推图排行榜', '推图')
+        .replace('竞技场排行榜', 'JJC')
+        .replace('工会战排行榜', '会战'));
+    $('.pc-page .left a').map((i, e) => $(e).attr('href', `${$(e).attr('href')}-m`));
+    $('.pc-page .anchor-div').map((i, e) => $(e).attr('id', `${$(e).attr('id')}-m`));
+    // $('.pc-page').html(($('.pc-page').html() as string)
+    //  .replace(/<div id="([\w]+?)"><\/div>/g, '<div id="$1-m"></div>'));
+    // $('input.search').attr('data-page', 'm');
+    return $('.pc-page').html();
 };
 const downloadFile = async (url, fileDir) => {
     const fileName = url.replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', '');
@@ -259,7 +335,7 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             await replaceJjcName(formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), nameData) +
             await replaceName(formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData), nameData);
         const html2 = await addLink(await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), nameData), nameData);
-        fs.writeFileSync('docs/raw.html', replacePicCdn(fs.readFileSync('template.html').toString()
+        const finalPcHtml = replacePicCdn(fs.readFileSync('template.html').toString()
             .replace('__HTML__', html)
             .replace('__HTML2__', html2)
             .replace('__NAMEDATA__', JSON.stringify(nameData))
@@ -267,7 +343,9 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             .replace('__UPDATETIME__', dayjs(updateTime).tz('Asia/Shanghai')
             .format('YYYY-MM-DD HH:mm:ss'))
             .replace('__SYNCTIME__', dayjs().tz('Asia/Shanghai')
-            .format('YYYY-MM-DD HH:mm:ss'))));
+            .format('YYYY-MM-DD HH:mm:ss')));
+        // fs.writeFileSync('docs/test.html', finalPcHtml.replace('', await pc2m(finalPcHtml)));
+        fs.writeFileSync('docs/raw.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
         for (let i = 0; i < 5; i++) { // eslint-disable-line
             if ((await downloadPic(html + html2)).filter((e) => !e).length === 0)
                 break;

@@ -77,7 +77,7 @@ div.right {
   min-width: 850px;
 }
 
-div.left {
+.pc-page div.left {
   position: fixed;
   left: 50px;
   top: 10%;
@@ -87,19 +87,25 @@ div.left {
   padding: 10px;
 }
 
-div.left>p {
+.pc-page div.left>p {
   margin: 10px 0;
 }
 
-div.left a {
+.pc-page div.left a,
+.m-page div.left a {
   border-radius: 5px;
   padding: 2px;
   text-decoration: none;
   color: #0000ee;
 }
 
-div.left a.active {
+.pc-page div.left a.active {
   background: #9de0f6;
+}
+
+.m-page div.left a.active {
+  background: #62d8ff;
+  border-radius: 10px;
 }
 
 body {
@@ -121,6 +127,10 @@ div.page_2 {
   width: 60%;
   min-width: 850px;
   margin: auto;
+}
+
+div.page_3 {
+  display: none;
 }
 
 .sorttable-switch {
@@ -242,4 +252,77 @@ div.time {
   right: 20px;
   top: 3px;
   color: #00adff;
+}
+
+@media (max-width: 1200px) {
+  .pc-page,
+  div.time {
+    display: none;
+  }
+
+  .m-page {
+    display: block;
+  }
+
+  div.top {
+    width: 60px;
+    height: 100px;
+    right: 5px;
+  }
+}
+
+@media (min-width: 1200px) {
+
+  .pc-page,
+  div.time {
+    display: block;
+  }
+
+  .m-page {
+    display: none;
+  }
+}
+
+.m-page div.right,
+.m-page div.page_2,
+.m-page div.search-div {
+  width: auto;
+  min-width: 150px;
+}
+
+.m-page div.search-div {
+  width: 80%;
+}
+
+.m-page table {
+  width: 80%;
+  min-width: 70px;
+}
+
+.m-page table.all td,
+.m-page table.quest td,
+.m-page table.jjc td,
+.m-page table.clan td {
+  padding: 10px 10%;
+}
+
+.m-page table.jjc th {
+  width: 50px;
+}
+
+.m-page table.all-c tr>td:first-child,
+.m-page table.all-c tr>th:first-child {
+  width: 60px;
+}
+
+.m-page div.left {
+  position: fixed;
+  left: 1px;
+  top: 100px;
+  width: 35px;
+  border: 2px dotted #00a9fd;
+  border-radius: 10px;
+  font-size: 13px;
+  padding: 0;
+  text-align: center;
 }

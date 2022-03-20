@@ -46,7 +46,7 @@ const formatHtml = (html: string, title: string, className: string): string => {
     return null;
   });
   $('table').addClass(className)
-    .before(`<div id="${className}"></div><h2>${title}</h2>`);
+    .before(`<div id="${className}" class="anchor-div"></div><h2>${title}</h2>`);
   return $('body').html() as string;
 };
 // 格式化竞技场Html
@@ -66,7 +66,7 @@ const formatJjcHtml = (html: string, title: string, className: string): string =
     .attr('width', '50px')
     .attr('height', '50px');
   $('table').addClass(className)
-    .before(`<div id="${className}"></div><h2>${title}</h2>`);
+    .before(`<div id="${className}" class="anchor-div"></div><h2>${title}</h2>`);
   return $('body').html() as string;
 };
 // 格式化全角色一览Html
@@ -105,8 +105,8 @@ const replaceText = (text: string): string => {
 };
 
 // 获取角色别名 https://github.com/Ice-Cirno/HoshinoBot/blob/master/hoshino/modules/priconne/_pcr_data.py
-// const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
-const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
+const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
+// const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
   .then((response) => {
     if (response.status === 200 && response.data) {
       return (response.data.match(/CHARA_NAME = (\{[\w\W]+?\}\n\n)/)?.[1].split(/\n+/) as Array<string>).map((e) => {
@@ -206,10 +206,11 @@ const addLink = async (html: string, nameData: Array<Array<string>>): Promise<st
       const img = $(element).find('img[data-src]');
       if (img.length > 1) {
         img.map((i, e) => {
+          const names = nameData.find((name) => name.includes($(e).attr('alt') as string));
+          $(e).attr('title', names?.join(' | ') || $(e).attr('alt'));
           const id = unitIds.find((unit) => unit?.names?.includes($(e).attr('alt') as string))?.id;
           if (id) {
-            $(e).attr('title', $(e).attr('alt'))
-              .wrap(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank"></a>`);
+            $(e).wrap(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank"></a>`);
           }
           return e;
         });
@@ -217,15 +218,93 @@ const addLink = async (html: string, nameData: Array<Array<string>>): Promise<st
         const name = img.attr('alt') || $(element).text()
           .trim();
         if (!name) return element;
+        const names = nameData.find((e) => e.includes(name.replace('(6⭐)', '')));
+        $(element).attr('title', names?.join(' | ') || name)
+          .attr('alt', name);
         const id = unitIds.find((unit) => unit?.names?.includes(name.replace('(6⭐)', '')))?.id;
         if (id) {
-          img.attr('alt', name).attr('title', name);
           $(element).html(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank">${$(element).html()}</a>`);
         }
       }
       return element;
     });
   return $('body').html() as string;
+};
+
+// 生成手机页面
+const pc2m = async (html: string): Promise<string> => {
+  const $ = load(html);
+
+  $('.pc-page table').map((i, ele) => {
+    if ($(ele).hasClass('jjc') || $(ele).hasClass('new') || $(ele).hasClass('all-c')) {
+      return ele;
+    }
+
+    const data:Array<Array<string>> = [];
+    $(ele).find('tr')
+      .map((i, e) => {
+        if ($(e).find('th').length > 0) {
+          data.push([]);
+          return e;
+        }
+        if ($(e).find('a').length > 0) {
+          $(e).find('a')
+            .map((index, element) => {
+              const link = $(element).attr('href');
+              data[data.length - 1].push(`<a class="unit-link" href="${link}" target="_blank">${$(element).find('img')
+                .prop('outerHTML')}</a>`);
+              return element;
+            });
+          $(e).remove();
+          return e;
+        }
+        if ($(e).find('img').length > 0) {
+          $(e).find('img')
+            .map((index, element) => {
+              data[data.length - 1].push($(element).prop('outerHTML') as string);
+              return element;
+            });
+          $(e).remove();
+          return e;
+        }
+        return e;
+      });
+    $(ele).find('tr')
+      .has('th')
+      .map((i, e) => {
+        $(e).find('th')
+          .attr('colspan', '1');
+        $(e).after(`<tr><td>${data[i].join('')}</td></tr>`);
+        return e;
+      });
+    return ele;
+  });
+  $('img').map((i, e) => {
+    if (['D', 'C', 'B', 'A', 'S', 'S+', 'SS', 'SS+'].includes($(e).attr('alt') as string)) {
+      if ($(e).parent()
+        .text()
+        .trim() === '※暂定') {
+        $(e).parent()
+          .html(`${$(e).attr('alt')}<br/>※暂定`);
+        return e;
+      }
+      $(e).parent()
+        .html($(e).attr('alt') as string);
+    }
+    return e;
+  });
+  $('.pc-page .left').html(($('.pc-page .left').html() as string)
+    .replace('新角色评价', '新')
+    .replace('综合排行榜', '综合')
+    .replace('推图排行榜', '推图')
+    .replace('竞技场排行榜', 'JJC')
+    .replace('工会战排行榜', '会战'));
+  $('.pc-page .left a').map((i, e) => $(e).attr('href', `${$(e).attr('href')}-m`));
+  $('.pc-page .anchor-div').map((i, e) => $(e).attr('id', `${$(e).attr('id')}-m`));
+  // $('.pc-page').html(($('.pc-page').html() as string)
+  //  .replace(/<div id="([\w]+?)"><\/div>/g, '<div id="$1-m"></div>'));
+  // $('input.search').attr('data-page', 'm');
+  return $('.pc-page').html() as string;
 };
 
 const downloadFile = async (url: string, fileDir: string): Promise<boolean> => {
@@ -291,7 +370,7 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
           ), nameData
         ), nameData
       );
-      fs.writeFileSync('docs/raw.html', replacePicCdn(fs.readFileSync('template.html').toString()
+      const finalPcHtml = replacePicCdn(fs.readFileSync('template.html').toString()
         .replace('__HTML__', html)
         .replace('__HTML2__', html2)
         .replace('__NAMEDATA__', JSON.stringify(nameData))
@@ -299,7 +378,9 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         .replace('__UPDATETIME__', dayjs(updateTime).tz('Asia/Shanghai')
           .format('YYYY-MM-DD HH:mm:ss'))
         .replace('__SYNCTIME__', dayjs().tz('Asia/Shanghai')
-          .format('YYYY-MM-DD HH:mm:ss'))));
+          .format('YYYY-MM-DD HH:mm:ss')));
+      // fs.writeFileSync('docs/test.html', finalPcHtml.replace('', await pc2m(finalPcHtml)));
+      fs.writeFileSync('docs/raw.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
       for (let i = 0; i < 5; i++) { // eslint-disable-line
         if ((await downloadPic(html + html2)).filter((e) => !e).length === 0) break;
       }
