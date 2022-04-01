@@ -481,7 +481,7 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         .replace('__HTML2__', html2)
         .replace('__NAMEDATA__', JSON.stringify(nameData))
         .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
-        .replace('__UPDATETIME__', dayjs(updateTime).tz('Asia/Shanghai')
+        .replace('__UPDATETIME__', dayjs().tz('Asia/Shanghai')
           .format('YYYY-MM-DD HH:mm:ss')));
       // fs.writeFileSync('docs/test.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
       const finalHtmls = splitPage(finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)), unbitsData);
