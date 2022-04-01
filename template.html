@@ -12,29 +12,33 @@
   <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lazyload@2.0.0-rc.2/lazyload.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/buunguyen/topbar@0.1.3/topbar.min.js"></script>
 </head>
 
 <body>
   <div class="nav">
     <div class="icon"><img src="./img/favicon48.png" alt="Icon" /></div>
     <div class="link">
-      <a href="#" onclick="showTab(this, 'page_1')" class="active">排行榜</a>
-      <a href="#" onclick="showTab(this, 'page_2')">全角色一览</a>
-      <a href="#" onclick="showTab(this, 'page_3')">关于</a>
+      <a href="/index.html" target="_self" class="pjax">排行榜</a>
+      <a href="/all-units.html" target="_self" class="pjax">全角色一览</a>
+      <a href="/entertainment.html" target="_self" class="pjax">娱乐榜单</a>
+      <a href="/about.html" target="_self" class="pjax">关于</a>
     </div>
-    <div class="time">更新时间：__UPDATETIME__<br />同步时间：__SYNCTIME__</div>
   </div>
   <div class="pc-page">
-    <div class="page page_1 left">
-      <p><a href="#new" target="_self">新角色评价</a></p>
-      <p><a href="#all" target="_self">综合排行榜</a></p>
-      <p><a href="#quest" target="_self">推图排行榜</a></p>
-      <p><a href="#jjc" target="_self">竞技场排行榜</a></p>
-      <p><a href="#clan" target="_self">工会战排行榜</a></p>
+    <div class="page main">
+      <div class="page left">
+        <p><a href="#new" target="_self">新角色评价</a></p>
+        <p><a href="#all" target="_self">综合排行榜</a></p>
+        <p><a href="#quest" target="_self">推图排行榜</a></p>
+        <p><a href="#jjc" target="_self">竞技场排行榜</a></p>
+        <p><a href="#clan" target="_self">工会战排行榜</a></p>
+      </div>
+      <div class="page right">__HTML__</div>
     </div>
-    <div class="page page_1 right">__HTML__</div>
-    <div class="page page_2">__HTML2__</div>
-    <div class="page page_3 about">
+    <div class="page all-units">__HTML2__</div>
+    <div class="page about">
       <div>
         <h1>关于本站</h1>
         <ul>
@@ -42,14 +46,23 @@
           <li>角色别名数据来自<a href="https://github.com/Ice-Cirno/HoshinoBot/blob/master/hoshino/modules/priconne/_pcr_data.py" target="_blank">HoshinoBot</a>项目，最新的角色只会显示日文名.</li>
           <li>角色详情会跳转至<a href="https://pcr.satroki.tech/" target="_blank">公主连结 Box</a>的详情页，有更好的角色数据来源可以在<a href="https://github.com/HCLonely/pcr-jp-rank" target="_blank">Github</a>提交 Issue 或 PR.</li>
         </ul>
+        <div class="time">更新时间：__UPDATETIME__</div>
       </div>
     </div>
   </div>
   <div class="m-page">__MPAGE__</div>
   <div id="toTop" class="top" title="返回顶部" onclick="scroll2top();"></div>
+  <div class="loading" style="display: none;">
+    <div id="loadingCharacter" class="remove">
+      <div class="charcter-container char02"></div>
+      <div class="text_loading hide">
+        <span class="icon_loading"><img src="/img/icon-loading.png" width="16" height="16" alt="loading..."></span>
+        <span><img src="/img/text-loading.png" width="88" height="20" alt="loading..."></span>
+      </div>
+    </div>
+  </div>
   <script>
     const nameData = __NAMEDATA__;
-
   </script>
   <script src="./main.min.js"></script>
 </body>

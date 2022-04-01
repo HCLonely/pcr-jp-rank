@@ -1,3 +1,7 @@
+h2 {
+  text-align: center;
+}
+
 table {
   font-family: verdana, arial, sans-serif;
   font-size: 11px;
@@ -157,14 +161,14 @@ div.page_3 {
   border-radius: 2px;
   box-sizing: border-box;
   box-shadow: #37bafb 0px 0px 5px 1px;
-  z-index: 9999999;
+  z-index: 100000;
   background-color: #ffffffc2;
   opacity: 0.8;
 }
 
 .nav .link {
   margin: auto;
-  width: 300px;
+  width: 420px;
 }
 
 .nav a {
@@ -248,10 +252,8 @@ div.icon {
 }
 
 div.time {
-  position: absolute;
-  right: 20px;
-  top: 3px;
-  color: #00adff;
+  text-align: center;
+  margin: 10px;
 }
 
 @media (max-width: 1200px) {
@@ -325,4 +327,93 @@ div.time {
   font-size: 13px;
   padding: 0;
   text-align: center;
+}
+
+canvas {
+  top: 48px !important;
+}
+
+.loading {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: 9998;
+  background: url(/img/bg-loading.gif) repeat center top;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transition: transform 330ms;
+  transition-timing-function: ease-in-out;
+  transform: translate3d(0, 0, 0);
+}
+
+#loadingCharacter {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  transition: all 1100ms;
+  transition-timing-function: ease-in-out;
+}
+
+#loadingCharacter .charcter-container {
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+  background: url(/img/sprite02.png) no-repeat center;
+  background-size: 100%;
+}
+
+#loadingCharacter .charcter-container.char02 {
+  background-image: url("/img/sprite02.png");
+  animation: spriteAnime02 700ms steps(19) infinite;
+}
+
+@keyframes spriteAnime02 {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 -3800px;
+  }
+}
+
+#loadingCharacter .text_loading {
+  position: absolute;
+  bottom: 21px;
+  left: 37px;
+  transition: opacity 400ms;
+}
+
+#loadingCharacter .text_loading span {
+  position: absolute;
+  display: block;
+  left: 24px;
+  top: -1px;
+}
+
+#loadingCharacter .text_loading .icon_loading {
+  width: 16px;
+  height: 16px;
+  left: 0;
+  top: 0;
+  transform-origin: 50%;
+  animation: iconRotate 500ms ease-in-out infinite;
+}
+
+@keyframes iconRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  80% {
+    transform: rotate(360deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

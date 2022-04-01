@@ -13,7 +13,7 @@ ${stderr.toString()}`;
 
 const gitStatus = execSync('git status -s').toString();
 
-if (!gitStatus) return;
+if (gitStatus.split('\n').filter((e) => e && e.includes('docs/') && !e.includes('docs/about')).length === 0) return;
 console.log(gitSpawn('git', ['add', '.']));
 console.log(gitSpawn('git', ['commit', '-m', 'Daily Sync']));
 console.log(gitSpawn('git', ['push', 'origin', 'main']));

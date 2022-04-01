@@ -13,7 +13,8 @@
   "dependencies": {
     "axios": "^0.26.1",
     "cheerio": "^1.0.0-rc.10",
-    "dayjs": "^1.11.0"
+    "dayjs": "^1.11.0",
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.17.7",

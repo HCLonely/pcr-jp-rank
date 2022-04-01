@@ -6,7 +6,26 @@ import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import { execSync } from 'child_process';
+import * as getUnitData from './getDb';
 
+interface unitData {
+  unit_id: number
+  unit_name: string
+  age: number
+  guild: string
+  race: string
+  height: number
+  weight: number
+  birth_month: number
+  birth_day: number
+  blood_type: string
+  search_area_width: number
+  names?: Array<string>
+}
+
+interface stringObject {
+  [key: string]: string
+}
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -105,8 +124,8 @@ const replaceText = (text: string): string => {
 };
 
 // 获取角色别名 https://github.com/Ice-Cirno/HoshinoBot/blob/master/hoshino/modules/priconne/_pcr_data.py
-const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
-// const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
+// const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
+const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
   .then((response) => {
     if (response.status === 200 && response.data) {
       return (response.data.match(/CHARA_NAME = (\{[\w\W]+?\}\n\n)/)?.[1].split(/\n+/) as Array<string>).map((e) => {
@@ -172,31 +191,19 @@ const replacePicCdn = (html: string): string => {
     .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
   return $.html() as string;
 };
+
 // 添加角色详情链接
-interface unitObj {
-  atkType: number
-  comment: string
-  cutin1_Star6: number
-  guildId: number
-  icon: string
-  rarity: number
-  searchAreaWidth: number
-  unitId: number
-  unitName: string
-}
-const addLink = async (html: string, nameData: Array<Array<string>>): Promise<string> => {
-  const userData: Array<unitObj> = await axios.get('https://pcr.satroki.tech/api/Unit/GetUnitDatas?s=jp').then((response) => response.data);
-  if (!userData) {
-    throw 'Get User Data Failed!';
+const addLink = async (html: string, nameData: Array<Array<string>>, unitData: Array<unitData>): Promise<string> => {
+  if (!unitData) {
+    throw 'Get Unit Data Failed!';
   }
-  const unitIds = userData.map((unit) => {
-    const matched = nameData.find((e) => e.includes(unit.unitName.replace(/（/g, '(').replace(/）/g, ')')
-      .replace(/＆/g, '&')));
+  const unitIds = unitData.map((unit) => {
+    const matched = nameData.find((e) => e.includes(unit.unit_name));
     if (!matched) {
       return null;
     }
     return {
-      id: unit.unitId,
+      id: unit.unit_id,
       names: matched
     };
   });
@@ -221,7 +228,10 @@ const addLink = async (html: string, nameData: Array<Array<string>>): Promise<st
         const names = nameData.find((e) => e.includes(name.replace('(6⭐)', '')));
         $(element).attr('title', names?.join(' | ') || name)
           .attr('alt', name);
-        const id = unitIds.find((unit) => unit?.names?.includes(name.replace('(6⭐)', '')))?.id;
+
+        const id = unitIds.find((unit) => unit?.names?.includes(name.replace('(6⭐)', '')))?.id ||
+          unitData.find((unit) => unit.unit_name === name)?.unit_id;
+
         if (id) {
           $(element).html(`<a class="unit-link" href="https://pcr.satroki.tech/unit/${id}" target="_blank">${$(element).html()}</a>`);
         }
@@ -280,16 +290,18 @@ const pc2m = async (html: string): Promise<string> => {
     return ele;
   });
   $('img').map((i, e) => {
-    if (['D', 'C', 'B', 'A', 'S', 'S+', 'SS', 'SS+'].includes($(e).attr('alt') as string)) {
+    if (['D', 'C', 'B', 'A', 'S', 'S+', 'SS', 'SS+', 'SSp'].includes($(e).attr('alt') as string)) {
       if ($(e).parent()
         .text()
         .trim() === '※暂定') {
         $(e).parent()
-          .html(`${$(e).attr('alt')}<br/>※暂定`);
+          .html(`${$(e).attr('alt')
+            ?.replace('SSp', 'SS+')}<br/>※暂定`);
         return e;
       }
       $(e).parent()
-        .html($(e).attr('alt') as string);
+        .html($(e).attr('alt')
+          ?.replace('SSp', 'SS+') as string);
     }
     return e;
   });
@@ -305,6 +317,90 @@ const pc2m = async (html: string): Promise<string> => {
   //  .replace(/<div id="([\w]+?)"><\/div>/g, '<div id="$1-m"></div>'));
   // $('input.search').attr('data-page', 'm');
   return $('.pc-page').html() as string;
+};
+
+const splitPage = (html: string, unitData: Array<unitData>): stringObject => {
+  const $ = load(html);
+  const pcPageMain = $('div.pc-page div.page.main').prop('outerHTML') as string;
+  const pcPageAllUnits = $('div.pc-page div.page.all-units').prop('outerHTML') as string;
+  const pcPageAbout = $('div.pc-page div.page.about').prop('outerHTML') as string;
+  const mPageMain = $('div.m-page div.page.main').prop('outerHTML') as string;
+  const mPageAllUnits = $('div.m-page div.page.all-units').prop('outerHTML') as string;
+  const mPageAbout = $('div.m-page div.page.about').prop('outerHTML') as string;
+
+  // 首页
+  $('a[href="/index.html"]').addClass('active');
+  $('div.pc-page').html(pcPageMain);
+  $('div.m-page').html(mPageMain);
+  $('body').append('<script pjax-data src="./index.min.js"></script>');
+  const pageMainHtml = $.html();
+  $('script[pjax-data]').remove();
+
+  // 全角色
+  $('div.nav a').removeClass('active');
+  $('a[href="/all-units.html"]').addClass('active');
+  $('div.pc-page').html(pcPageAllUnits);
+  $('div.m-page').html(mPageAllUnits);
+  $('body').append('<script pjax-data src="./all-units.min.js"></script>');
+  const pageAllUnitsHtml = $.html();
+  $('script[pjax-data]').remove();
+
+  // 娱乐榜单
+  $('div.nav a').removeClass('active');
+  $('a[href="/entertainment.html"]').addClass('active');
+  $('div.pc-page').html(pcPageAllUnits);
+  $('div.pc-page,div.m-page').find('thead th')
+    .map((i, el) => {
+      switch (i % 8) {
+      case 1:
+        $(el).html('年龄<span class="sorttable-switch"></span>');
+        break;
+      case 2:
+        $(el).html('身高/cm<span class="sorttable-switch"></span>');
+        break;
+      case 3:
+        $(el).html('体重/kg<span class="sorttable-switch"></span>');
+        break;
+      case 4:
+        $(el).html('生日<span class="sorttable-switch"></span>');
+        break;
+      case 5:
+        $(el).html('血型<span class="sorttable-switch"></span>');
+        break;
+      case 6:
+        $(el).html('站位<span class="sorttable-switch"></span>');
+        break;
+      case 7:
+        $(el).remove();
+        break;
+      default:
+        break;
+      }
+      return el;
+    });
+  // eslint-disable-next-line max-len
+  const tbodyHtml = unitData.map((data) => `<tr><td title="${data.names?.join(' | ') || data.unit_name}" alt="${data.names?.[0] || data.unit_name}"><a class="unit-link" href="https://pcr.satroki.tech/unit/${data.unit_id}" target="_blank" one-link-mark="yes"><img src="./img/unknown.jpg" data-src="https://redive.estertion.win/icon/unit/${data.unit_id + 30}.webp" width="50px" height="50px" class="js-lazyload-fixed-size-img" alt="${data.names?.[0] || data.unit_name}"><br>${data.names?.[0] || data.unit_name}</a></td><td title="${data.age}" alt="${data.age}">${data.age}</td><td title="${data.height}" alt="${data.height}">${data.height}</td><td title="${data.weight}" alt="${data.weight}">${data.weight}</td><td title="${data.birth_month}月${data.birth_day}日" alt="${data.birth_month}${data.birth_day.toString().padStart(2, '0')}">${data.birth_month}月${data.birth_day}日</td><td title="${data.blood_type}" alt="${data.blood_type}">${data.blood_type}</td><td title="${data.search_area_width}" alt="${data.search_area_width}">${data.search_area_width}</td></tr>`).join('');
+  $('div.pc-page,div.m-page').find('tbody')
+    .html(tbodyHtml);
+  $('body').append('<script pjax-data src="./entertainment.min.js"></script>');
+  const pageEntertainmentHtml = $.html().replace('全角色一览', '娱乐排行榜');
+  $('script[pjax-data]').remove();
+
+  // 关于
+  $('div.nav a').removeClass('active');
+  $('a[href="/about.html"]').addClass('active');
+  $('div.pc-page').html(pcPageAbout);
+  $('div.m-page').html(mPageAbout);
+  $('body').append('<script pjax-data></script>');
+  const pageAbout = $.html();
+  $('script[pjax-data]').remove();
+
+  return {
+    index: pageMainHtml,
+    'all-units': pageAllUnitsHtml,
+    entertainment: pageEntertainmentHtml,
+    about: pageAbout
+  };
 };
 
 const downloadFile = async (url: string, fileDir: string): Promise<boolean> => {
@@ -341,6 +437,16 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
   .then(async (response) => {
     if (response.status === 200 && response.data) {
       const nameData = await getNameData();
+      const unitData: Array<unitData> = await getUnitData();
+      const unbitsData: Array<unitData> = unitData.map((unit) => {
+        const matched = nameData.find((e) => e.includes(unit.unit_name));
+        if (!matched) {
+          return unit;
+        }
+        unit.names = matched;
+        return unit;
+      });
+
       const $ = load(response.data);
       const newtiHtml = replaceText($('div.puri_newiti-table').html() as string);
       const table = $('.puri_5col-table');
@@ -361,14 +467,14 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
           ) +
           await replaceName(
             formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData
-          ), nameData
+          ), nameData, unitData
       );
       const html2 = await addLink(
         await replaceName(
           formatHitiranHtml(
             formatHtml(hitiranHtml, '全角色一览', 'all-c')
           ), nameData
-        ), nameData
+        ), nameData, unitData
       );
       const finalPcHtml = replacePicCdn(fs.readFileSync('template.html').toString()
         .replace('__HTML__', html)
@@ -376,11 +482,13 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         .replace('__NAMEDATA__', JSON.stringify(nameData))
         .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
         .replace('__UPDATETIME__', dayjs(updateTime).tz('Asia/Shanghai')
-          .format('YYYY-MM-DD HH:mm:ss'))
-        .replace('__SYNCTIME__', dayjs().tz('Asia/Shanghai')
           .format('YYYY-MM-DD HH:mm:ss')));
-      // fs.writeFileSync('docs/test.html', finalPcHtml.replace('', await pc2m(finalPcHtml)));
-      fs.writeFileSync('docs/raw.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
+      // fs.writeFileSync('docs/test.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
+      const finalHtmls = splitPage(finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)), unbitsData);
+      for (const [name, html] of Object.entries(finalHtmls)) {
+        fs.writeFileSync(`docs/${name}.raw.html`, html);
+      }
+      // fs.writeFileSync('docs/raw.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
       for (let i = 0; i < 5; i++) { // eslint-disable-line
         if ((await downloadPic(html + html2)).filter((e) => !e).length === 0) break;
       }
@@ -389,8 +497,12 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         const version = new Date().getTime();
         fs.writeFileSync('./docs/cdn/version', `${version}`);
       }
-      fs.writeFileSync('./docs/raw.html', fs.readFileSync('./docs/raw.html').toString()
-        .replaceAll('@main', `@${fs.readFileSync('./docs/cdn/version').toString()
-          .trim()}`));
+
+      return;
+      for (const name of Object.keys(finalHtmls)) {
+        fs.writeFileSync(`./docs/${name}.raw.html`, fs.readFileSync(`./docs/${name}.raw.html`).toString()
+          .replaceAll('@main', `@${fs.readFileSync('./docs/cdn/version').toString()
+            .trim()}`));
+      }
     }
   });

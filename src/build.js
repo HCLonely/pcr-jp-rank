@@ -32,13 +32,40 @@ const uglifyJsOptions = {
 const minedJsText = UglifyJS.minify(transedJsText.code, uglifyJsOptions);
 fs.writeFileSync('./docs/main.min.js', minedJsText.code);
 
-// 压缩 HTML
-const htmlText = fs.readFileSync('./docs/raw.html').toString();
-const htmlMinifierOptions = {
-  removeComments: true,
-  collapseWhitespace: true,
-  minifyJS: true,
-  minifyCSS: true
-};
-const minedHtmlText = minify(htmlText, htmlMinifierOptions);
-fs.writeFileSync('./docs/index.html', minedHtmlText);
+function minFiles(name) {
+  if (fs.existsSync(`./docs/${name}.js`)) {
+  // Babel转换后压缩 JS
+    const jsText = fs.readFileSync(`./docs/${name}.js`).toString();
+    const babelOption = {
+      presets: [
+        [
+          '@babel/preset-env',
+          {
+            targets: '> 1%, not dead'
+          }
+        ]
+      ]
+    };
+    const transedJsText = transformSync(jsText, babelOption);
+    const uglifyJsOptions = {
+      ie: true
+    };
+    const minedJsText = UglifyJS.minify(transedJsText.code, uglifyJsOptions);
+    fs.writeFileSync(`./docs/${name}.min.js`, minedJsText.code);
+  }
+  // 压缩 HTML
+  const htmlText = fs.readFileSync(`./docs/${name}.raw.html`).toString();
+  const htmlMinifierOptions = {
+    removeComments: true,
+    collapseWhitespace: true,
+    minifyJS: true,
+    minifyCSS: true
+  };
+  const minedHtmlText = minify(htmlText, htmlMinifierOptions);
+  fs.writeFileSync(`./docs/${name}.html`, minedHtmlText);
+}
+
+minFiles('index');
+minFiles('all-units');
+minFiles('entertainment');
+minFiles('about');
