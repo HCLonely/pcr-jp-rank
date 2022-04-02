@@ -1,11 +1,4 @@
 /* global $, lazyload, nameData, Pjax, topbar */
-// lazyload(document.querySelectorAll('.js-lazyload-fixed-size-img'));
-/*
-function showTab(element) {
-  [...document.querySelectorAll('div.nav a')].map((e) => e.className = 'pjax');
-  element.className = 'pjax active';
-}
-*/
 $('div.nav a.pjax').on('click', function () {
   $('div.nav a.pjax').attr('class', 'pjax');
   this.className = 'pjax active';
