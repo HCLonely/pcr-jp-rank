@@ -3,7 +3,7 @@ name: Get Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: '00 15 L * *'
+    - cron: '00 15 28 * *'
 
 jobs:
   build:
