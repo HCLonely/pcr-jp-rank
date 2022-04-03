@@ -3,7 +3,7 @@ const { spawnSync, execSync } = require('child_process');
 const fs = require('fs');
 
 const { GITHUB_TOKEN, FORCE } = process.env;
-console.log(FORCE);
+
 const gitSpawn = (param1, param2, param3) => {
   const [, stdout, stderr] = spawnSync(param1, param2, param3).output;
   return `stdout:
@@ -14,7 +14,7 @@ ${stderr.toString()}`;
 
 const gitStatus = execSync('git status -s').toString();
 
-if (gitStatus.split('\n').filter((e) => e && e.includes('docs/') && !e.includes('docs/about')).length === 0) return;
+if (gitStatus.split('\n').filter((e) => e && e.includes('docs/') && !e.includes('docs/about')).length === 0 && !FORCE) return;
 console.log(gitSpawn('git', ['add', '.']));
 console.log(gitSpawn('git', ['commit', '-m', 'Daily Sync']));
 console.log(gitSpawn('git', ['push', 'origin', 'main']));
