@@ -3,6 +3,7 @@ const { spawnSync, execSync } = require('child_process');
 const fs = require('fs');
 
 const { GITHUB_TOKEN, FORCE } = process.env;
+console.log(FORCE);
 const gitSpawn = (param1, param2, param3) => {
   const [, stdout, stderr] = spawnSync(param1, param2, param3).output;
   return `stdout:
@@ -29,7 +30,7 @@ if (!execSync(`git tag -l "${version}"`).toString()) {
 if (gitStatus.includes('docs/') || FORCE) {
   fs.writeFileSync('docs/.gitignore', ['*.raw.html', '*.js', '*.css', '!*.min.js', '!*.min.css', 'sitemap.json'].join('\n'));
   console.log(gitSpawn('git', ['init'], { cwd: 'docs' }));
-  // console.log(gitSpawn('git', ['rm', '-r', '--cached', '.'], { cwd: 'docs' }));
+  console.log(gitSpawn('git', ['rm', '-r', '--cached', '.'], { cwd: 'docs' }));
   console.log(gitSpawn('git', ['add', '-A'], { cwd: 'docs' }));
   console.log(gitSpawn('git', ['commit', '-m', 'Daily Sync'], { cwd: 'docs' }));
   console.log(gitSpawn('git', ['push', '-u', `https://x-access-token:${GITHUB_TOKEN}@github.com/HCLonely/pcr-jp-rank.git`, 'HEAD:gh-pages', '--force'], { cwd: 'docs' })); // eslint-disable-line
