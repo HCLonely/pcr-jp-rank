@@ -169,9 +169,10 @@ div.page_3 {
 .nav .link {
   margin: auto;
   width: 420px;
+  text-align: center;
 }
 
-.nav a {
+.nav .link a {
   height: 100%;
   font-size: 20px;
   margin: 10px;
@@ -182,8 +183,8 @@ div.page_3 {
   padding: 5px;
 }
 
-.nav a:hover,
-.nav a.active {
+.nav .link a:hover,
+.nav .link a.active {
   box-shadow: inset #b4dbed 0 0 5px 1px;
 }
 
@@ -266,8 +267,7 @@ div.time {
 }
 
 @media (max-width: 1200px) {
-  .pc-page,
-  div.time {
+  .pc-page {
     display: none;
   }
 
@@ -282,10 +282,24 @@ div.time {
   }
 }
 
-@media (min-width: 1200px) {
+@media (max-width: 500px) {
+  div.icon a {
+    display: none;
+  }
 
+  .nav .link {
+    width: auto;
+  }
+
+  .nav .link a {
+    margin: 10px 2px;
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1200px) {
   .pc-page,
-  div.time {
+  div.icon a {
     display: block;
   }
 
