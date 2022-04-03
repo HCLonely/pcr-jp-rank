@@ -102,8 +102,8 @@ const replaceText = (text) => {
     return text;
 };
 // 获取角色别名 https://github.com/Ice-Cirno/HoshinoBot/blob/master/hoshino/modules/priconne/_pcr_data.py
-const getNameData = () => axios_1.default.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
-    // const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
+// const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
+const getNameData = () => axios_1.default.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
     .then((response) => {
     if (response.status === 200 && response.data) {
         return response.data.match(/CHARA_NAME = (\{[\w\W]+?\}\n\n)/)?.[1].split(/\n+/).map((e) => {
@@ -401,14 +401,13 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
     if (response.status === 200 && response.data) {
         const nameData = await getNameData();
         const unitData = await getUnitData();
-        const unbitsData = unitData.map((unit) => {
+        const unitsData = unitData.map((unit) => {
             const matched = nameData.find((e) => e.includes(unit.unit_name));
-            if (!matched) {
-                return unit;
-            }
-            unit.names = matched;
+            unit.names = [...new Set([unit.unit_name_cn, ...(matched || [unit.unit_name])])].filter((e) => e);
             return unit;
         });
+        const namesData = unitsData.map((unit) => unit.names || []).filter((e) => e.length > 0);
+        fs.writeFileSync('test.json', JSON.stringify(namesData));
         const $ = (0, cheerio_1.load)(response.data);
         const newtiHtml = replaceText($('div.puri_newiti-table').html());
         const table = $('.puri_5col-table');
@@ -418,24 +417,24 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
         const clanBattleHtml = replaceText(table.eq(3).html());
         const jjcHtml = replaceText($('div.puri_rank123-table').html());
         const hitiranHtml = replaceText($('div.puri_hitiran-table').html());
-        const updateTime = $('time[datetime]').attr('datetime');
+        // const updateTime = $('time[datetime]').attr('datetime');
         const html = await addLink(await replaceName(formatHtml(newtiHtml, '新角色评价', 'new') +
             formatHtml(tablePlus(allRank1Html, allRank2Html), '综合排行榜', 'all') +
-            formatHtml(questHtml, '推图排行榜', 'quest'), nameData) +
-            await replaceJjcName(formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), nameData) +
-            await replaceName(formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), nameData), nameData, unitData);
-        const html2 = await addLink(await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), nameData), nameData, unitData);
+            formatHtml(questHtml, '推图排行榜', 'quest'), namesData) +
+            await replaceJjcName(formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), namesData) +
+            await replaceName(formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), namesData), namesData, unitsData);
+        const html2 = await addLink(await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), namesData), namesData, unitsData);
         const finalPcHtml = replacePicCdn(fs.readFileSync('template.html').toString()
             .replace('__HTML__', html)
             .replace('__HTML2__', html2)
-            .replace('__NAMEDATA__', JSON.stringify(nameData))
+            .replace('__NAMEDATA__', JSON.stringify(namesData))
             .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
             .replace('__UPDATETIME__', dayjs().tz('Asia/Shanghai')
             .format('YYYY-MM-DD HH:mm:ss'))
             .replace('__ARCHIVEDDATE__', fs.readdirSync('docs/archived').map((e) => `<li><a href="/archived/${e}" target="_self">${e}</a></li>`)
             .join('')));
         // fs.writeFileSync('docs/test.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
-        const finalHtmls = splitPage(finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)), unbitsData);
+        const finalHtmls = splitPage(finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)), unitsData);
         for (const [name, html] of Object.entries(finalHtmls)) {
             fs.writeFileSync(`docs/${name}.raw.html`, html);
         }
