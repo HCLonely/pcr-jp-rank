@@ -1,4 +1,4 @@
-name: Get Data
+name: Archive
 
 on:
   workflow_dispatch:
