@@ -482,7 +482,9 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
         .replace('__UPDATETIME__', dayjs().tz('Asia/Shanghai')
           .format('YYYY-MM-DD HH:mm:ss'))
-        .replace('__ARCHIVEDDATE__', fs.readdirSync('docs/archived').map((e) => `<li><a href="/archived/${e}" target="_self">${e}</a></li>`)
+        // eslint-disable-next-line max-len
+        .replace('__ARCHIVEDDATE__', fs.readdirSync('docs/archived').map((e) => (fs.lstatSync(`docs/archived/${e}`).isDirectory() ? `<li><a href="/archived/${e}" target="_self">${e}</a></li>` : null))
+          .filter((e) => e)
           .join(''))
       );
       // fs.writeFileSync('docs/test.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
