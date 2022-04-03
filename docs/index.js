@@ -1,5 +1,5 @@
 /* global $, lazyload, getElementViewTop */
-$('table img').attr('onerror', 'this.onerror=null;this.src="./img/unknown.jpg"');
+$('table  img').attr('onerror', 'this.onerror=null;this.src="./img/unknown.jpg"');
 lazyload(document.querySelectorAll('.js-lazyload-fixed-size-img'));
 window.addEventListener('scroll', () => {
   const position = {

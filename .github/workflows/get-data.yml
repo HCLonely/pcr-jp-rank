@@ -16,6 +16,7 @@ jobs:
         run : |
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+          git ls-files | while read file; do touch -d $(git log -1 --format="@%ct" "$file") "$file"; done
       - name: Use Node.js
         uses: actions/setup-node@v1
         with:
@@ -37,3 +38,10 @@ jobs:
           TZ: Asia/Shanghai
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: node src/pushDocs.js
+      - name: SEO
+        env:
+          TZ: Asia/Shanghai
+        run: |
+          node src/seo.js
+          curl -H 'Content-Type:text/plain' --data-binary @docs/sitemap.txt "http://data.zz.baidu.com/urls?site=https://jpcr-rank.hclonely.com&token=\${{secrets.BAIDU_PUSH_TOKEN}}"
+          curl -X POST 'https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlBatch?apikey=\${{secrets.BING_PUSH_TOKEN}}' -H 'Content-Type: application/json' -H 'charset: utf-8' -d @docs/sitemap.json
