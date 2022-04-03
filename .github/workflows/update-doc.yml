@@ -1,0 +1,46 @@
+name: Force Update Doc
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v2
+      - name: Set git identity
+        run : |
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git ls-files | while read file; do touch -d $(git log -1 --format="@%ct" "$file") "$file"; done
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16.x'
+      - name: Cache node modules
+        uses: actions/cache@v1
+        id: cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+      - run: npm start
+      - name: Push
+        env:
+          TZ: Asia/Shanghai
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          FORCE: true
+        run: node src/pushDocs.js
+      - name: SEO
+        env:
+          TZ: Asia/Shanghai
+        run: |
+          node src/seo.js
+          curl -H 'Content-Type:text/plain' --data-binary @docs/sitemap.txt "http://data.zz.baidu.com/urls?site=https://jpcr-rank.hclonely.com&token=${{secrets.BAIDU_PUSH_TOKEN}}"
+          curl -X POST 'https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlBatch?apikey=${{secrets.BING_PUSH_TOKEN}}' -H 'Content-Type: application/json' -H 'charset: utf-8' -d @docs/sitemap.json
