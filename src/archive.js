@@ -10,6 +10,6 @@ const date = dayjs().tz('Asia/Shanghai')
   .format('YYYY-MM-DD');
 
 fs.copySync('docs/', `temp/${date}`, {
-  filter: (src) => !src.includes('cdn') && !src.includes('archived')
+  filter: (src) => !src.includes('cdn') && !src.includes('archived') && !src.includes('.gitignore')
 });
 fs.copySync(`temp/${date}`, `docs/archived/${date}`);
