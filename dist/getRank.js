@@ -102,8 +102,8 @@ const replaceText = (text) => {
     return text;
 };
 // 获取角色别名 https://github.com/Ice-Cirno/HoshinoBot/blob/master/hoshino/modules/priconne/_pcr_data.py
-// const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
-const getNameData = () => axios_1.default.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
+const getNameData = () => axios_1.default.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
+    // const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
     .then((response) => {
     if (response.status === 200 && response.data) {
         return response.data.match(/CHARA_NAME = (\{[\w\W]+?\}\n\n)/)?.[1].split(/\n+/).map((e) => {
@@ -407,7 +407,6 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             return unit;
         });
         const namesData = unitsData.map((unit) => unit.names || []).filter((e) => e.length > 0);
-        fs.writeFileSync('test.json', JSON.stringify(namesData));
         const $ = (0, cheerio_1.load)(response.data);
         const newtiHtml = replaceText($('div.puri_newiti-table').html());
         const table = $('.puri_5col-table');
