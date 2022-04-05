@@ -35,23 +35,38 @@ const rankSortRule = {
   SS: 7,
   'SS+': 8
 };
+function sortPinyin(a, b) {
+  const pingyinA = a.split('|');
+  const pingyinB = b.split('|');
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0;i < Math.max(pingyinA.length, pingyinB.length);i++) {
+    const pingyinAText = pingyinA[i] || '';
+    const pingyinBText = pingyinB[i] || '';
+    if (pingyinAText === pingyinBText) continue;
+    return pingyinAText - pingyinBText;
+  }
+}
 function sortRule(a, b) {
   const [altStrA, altNameA] = a.split('-');
   const [altStrB, altNameB] = b.split('-');
   if (/^[\d]+$/.test(`${altStrA}${altStrB}`)) {
     const altNumA = parseInt(altStrA, 10);
     const altNumB = parseInt(altStrB, 10);
-    return altNumA === altNumB ? altNameA - altNameB : altNumA - altNumB;
+
+    return altNumA === altNumB ? sortPinyin(altNameA, altNameB) : altNumA - altNumB;
   }
   return a - b;
 }
 function sortRankItem(i, sort, init) {
   const allData = {};
   $('table.sorttable:visible>tbody tr').map((index, e) => {
+    const nameAlt = e.getElementsByTagName('td')[0].getAttribute('data-pinyin') || '';
+    if (i === 0) {
+      allData[nameAlt] = e;
+      return null;
+    }
     // eslint-disable-next-line max-len
     const alt = rankSortRule[e.getElementsByTagName('td')[i].getElementsByTagName('img')?.[0]?.getAttribute('alt')?.trim() || e.getElementsByTagName('td')[i].getAttribute('alt')?.trim() || e.getElementsByTagName('td')[i].innerText.replace('※暂定', '').trim()] || 0;
-    // eslint-disable-next-line max-len
-    const nameAlt = e.getElementsByTagName('td')[0].getElementsByTagName('img')?.[0]?.getAttribute('alt') || e.getElementsByTagName('td')[0].getAttribute('alt');
     allData[`${alt}-${nameAlt}`] = e;
     return null;
   });
@@ -83,12 +98,15 @@ function sortItem(i, sort, init) {
     O: 4
   };
   $('table.sorttable:visible>tbody tr').map((index, e) => {
+    const nameAlt = e.getElementsByTagName('td')[0].getAttribute('data-pinyin') || '';
+    if (i === 0) {
+      allData[nameAlt] = e;
+      return null;
+    }
     // eslint-disable-next-line max-len
     const alt = e.getElementsByTagName('td')[i].getElementsByTagName('img')?.[0]?.getAttribute('alt')?.trim() || e.getElementsByTagName('td')[i].getAttribute('alt')?.trim() || e.getElementsByTagName('td')[i].innerText || 0;
     // eslint-disable-next-line no-nested-ternary
     const altNum = i === 5 ? (bloodTypeRule[alt] || 0) : (alt.includes('?') ? (numRule[alt] || 0) : (alt === '-' ? 0 : alt));
-    // eslint-disable-next-line max-len
-    const nameAlt = e.getElementsByTagName('td')[0].getElementsByTagName('img')?.[0]?.getAttribute('alt') || e.getElementsByTagName('td')[0].getAttribute('alt');
     allData[`${altNum}-${nameAlt}`] = e;
     return null;
   });

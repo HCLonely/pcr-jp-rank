@@ -7,6 +7,7 @@ import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import { execSync } from 'child_process';
 import * as getUnitData from './getDb';
+import { pinyin } from 'pinyin-pro';
 
 interface unitData {
   unit_id: number
@@ -143,7 +144,7 @@ const getNameData = () => axios.get('https://raw.githubusercontent.com/Ice-Cirno
   .catch((error) => { throw error; });
 
 // 角色名替换为中文
-const replaceName = async (html: string, nameData: Array<Array<string>>): Promise<string> => {
+const replaceName = async (html: string, nameData: Array<Array<string>>, namesPinyinData: stringObject): Promise<string> => {
   const $ = load(html);
   $('td').map((index, element) => {
     const nameJp = $(element).text()
@@ -156,14 +157,15 @@ const replaceName = async (html: string, nameData: Array<Array<string>>): Promis
         .html(($('td').eq(index)
           .html() as string)
           .replace(/＆|&amp;/g, '&')
-          .replaceAll(nameJp, nameArr[0] + (nameJp.includes('6⭐') ? '(6⭐)' : '')));
+          .replaceAll(nameJp, nameArr[0] + (nameJp.includes('6⭐') ? '(6⭐)' : '')))
+        .attr('data-pinyin', namesPinyinData[nameArr[0]]);
     }
     return element;
   });
   return $('body').html() as string;
 };
 // JJC角色名替换为中文
-const replaceJjcName = async (html: string, nameData: Array<Array<string>>): Promise<string> => {
+const replaceJjcName = async (html: string, nameData: Array<Array<string>>, namesPinyinData: stringObject): Promise<string> => {
   const $ = load(html);
   $('td').has('img[data-src]')
     .map((index, element) => {
@@ -176,7 +178,8 @@ const replaceJjcName = async (html: string, nameData: Array<Array<string>>): Pro
             if (!nameJp) return e;
             const nameArr = nameData.find((e) => e.includes(nameJp));
             if (nameArr) {
-              $(e).attr('alt', nameArr[0]);
+              $(e).attr('alt', nameArr[0])
+                .attr('data-pinyin', namesPinyinData[nameArr[0]]);
             }
             return e;
           });
@@ -444,7 +447,9 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         unit.names = [...new Set([unit.unit_name_cn, ...(matched || [unit.unit_name])])].filter((e) => e);
         return unit;
       });
-      const namesData = unitsData.map((unit) => unit.names || []).filter((e) => e.length > 0);
+      const namesData: stringObject = {};
+      const namesOnlyData = unitsData.map((unit) => unit.names || []).filter((e) => e.length > 0);
+      namesOnlyData.map((names) => namesData[names[0]] = pinyin(names[0], { toneType: 'num', type: 'array', nonZh: 'consecutive' }).join('|'));
 
       const $ = load(response.data);
       const newtiHtml = replaceText($('div.puri_newiti-table').html() as string);
@@ -460,20 +465,20 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
         await replaceName(
           formatHtml(newtiHtml, '新角色评价', 'new') +
           formatHtml(tablePlus(allRank1Html, allRank2Html), '综合排行榜', 'all') +
-          formatHtml(questHtml, '推图排行榜', 'quest'), namesData) +
+          formatHtml(questHtml, '推图排行榜', 'quest'), namesOnlyData, namesData) +
           await replaceJjcName(
-            formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), namesData
+            formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), namesOnlyData, namesData
           ) +
           await replaceName(
-            formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), namesData
-          ), namesData, unitsData
+            formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), namesOnlyData, namesData
+          ), namesOnlyData, unitsData
       );
       const html2 = await addLink(
         await replaceName(
           formatHitiranHtml(
             formatHtml(hitiranHtml, '全角色一览', 'all-c')
-          ), namesData
-        ), namesData, unitsData
+          ), namesOnlyData, namesData
+        ), namesOnlyData, unitsData
       );
       const finalPcHtml = replacePicCdn(fs.readFileSync('template.html').toString()
         .replace('__HTML__', html)

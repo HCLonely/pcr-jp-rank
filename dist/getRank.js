@@ -9,6 +9,7 @@ const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 const child_process_1 = require("child_process");
 const getUnitData = require("./getDb");
+const pinyin_pro_1 = require("pinyin-pro");
 dayjs.extend(utc);
 dayjs.extend(timezone);
 const textMap = JSON.parse(fs.readFileSync('text-map.json').toString());
@@ -119,7 +120,7 @@ const getNameData = () => axios_1.default.get('https://raw.githubusercontent.com
 })
     .catch((error) => { throw error; });
 // 角色名替换为中文
-const replaceName = async (html, nameData) => {
+const replaceName = async (html, nameData, namesPinyinData) => {
     const $ = (0, cheerio_1.load)(html);
     $('td').map((index, element) => {
         const nameJp = $(element).text()
@@ -131,14 +132,15 @@ const replaceName = async (html, nameData) => {
                 .html($('td').eq(index)
                 .html()
                 .replace(/＆|&amp;/g, '&')
-                .replaceAll(nameJp, nameArr[0] + (nameJp.includes('6⭐') ? '(6⭐)' : '')));
+                .replaceAll(nameJp, nameArr[0] + (nameJp.includes('6⭐') ? '(6⭐)' : '')))
+                .attr('data-pinyin', namesPinyinData[nameArr[0]]);
         }
         return element;
     });
     return $('body').html();
 };
 // JJC角色名替换为中文
-const replaceJjcName = async (html, nameData) => {
+const replaceJjcName = async (html, nameData, namesPinyinData) => {
     const $ = (0, cheerio_1.load)(html);
     $('td').has('img[data-src]')
         .map((index, element) => {
@@ -152,7 +154,8 @@ const replaceJjcName = async (html, nameData) => {
                     return e;
                 const nameArr = nameData.find((e) => e.includes(nameJp));
                 if (nameArr) {
-                    $(e).attr('alt', nameArr[0]);
+                    $(e).attr('alt', nameArr[0])
+                        .attr('data-pinyin', namesPinyinData[nameArr[0]]);
                 }
                 return e;
             });
@@ -406,7 +409,9 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             unit.names = [...new Set([unit.unit_name_cn, ...(matched || [unit.unit_name])])].filter((e) => e);
             return unit;
         });
-        const namesData = unitsData.map((unit) => unit.names || []).filter((e) => e.length > 0);
+        const namesData = {};
+        const namesOnlyData = unitsData.map((unit) => unit.names || []).filter((e) => e.length > 0);
+        namesOnlyData.map((names) => namesData[names[0]] = (0, pinyin_pro_1.pinyin)(names[0], { toneType: 'num', type: 'array', nonZh: 'consecutive' }).join('|'));
         const $ = (0, cheerio_1.load)(response.data);
         const newtiHtml = replaceText($('div.puri_newiti-table').html());
         const table = $('.puri_5col-table');
@@ -419,10 +424,10 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
         // const updateTime = $('time[datetime]').attr('datetime');
         const html = await addLink(await replaceName(formatHtml(newtiHtml, '新角色评价', 'new') +
             formatHtml(tablePlus(allRank1Html, allRank2Html), '综合排行榜', 'all') +
-            formatHtml(questHtml, '推图排行榜', 'quest'), namesData) +
-            await replaceJjcName(formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), namesData) +
-            await replaceName(formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), namesData), namesData, unitsData);
-        const html2 = await addLink(await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), namesData), namesData, unitsData);
+            formatHtml(questHtml, '推图排行榜', 'quest'), namesOnlyData, namesData) +
+            await replaceJjcName(formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), namesOnlyData, namesData) +
+            await replaceName(formatHtml(clanBattleHtml, '工会战排行榜', 'clan'), namesOnlyData, namesData), namesOnlyData, unitsData);
+        const html2 = await addLink(await replaceName(formatHitiranHtml(formatHtml(hitiranHtml, '全角色一览', 'all-c')), namesOnlyData, namesData), namesOnlyData, unitsData);
         const finalPcHtml = replacePicCdn(fs.readFileSync('template.html').toString()
             .replace('__HTML__', html)
             .replace('__HTML2__', html2)
