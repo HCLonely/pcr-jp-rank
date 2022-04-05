@@ -10,6 +10,9 @@ const timezone = require("dayjs/plugin/timezone");
 const child_process_1 = require("child_process");
 const getUnitData = require("./getDb");
 const pinyin_pro_1 = require("pinyin-pro");
+const isDev = process.argv[2] === 'dev';
+const nameDataLink = isDev ? 'https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py' :
+    'https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 const textMap = JSON.parse(fs.readFileSync('text-map.json').toString());
@@ -75,7 +78,8 @@ const formatHitiranHtml = (html) => {
     const $ = (0, cheerio_1.load)(html);
     $('table').prepend(`<thead>${$('tr').eq(0)
         .prop('outerHTML')}</thead>`);
-    $('thead th').append('<span class="sorttable-switch"></span>');
+    $('thead th').attr('class', 'js-sorttable-switch')
+        .append('<span class="sorttable-switch"></span>');
     $('tr').eq(1)
         .remove();
     $('table').eq(0)
@@ -103,8 +107,7 @@ const replaceText = (text) => {
     return text;
 };
 // 获取角色别名 https://github.com/Ice-Cirno/HoshinoBot/blob/master/hoshino/modules/priconne/_pcr_data.py
-const getNameData = () => axios_1.default.get('https://raw.githubusercontent.com/Ice-Cirno/HoshinoBot/master/hoshino/modules/priconne/_pcr_data.py')
-    // const getNameData = () => axios.get('https://cdn.jsdelivr.net/gh/Ice-Cirno/HoshinoBot@master/hoshino/modules/priconne/_pcr_data.py')
+const getNameData = () => axios_1.default.get(nameDataLink)
     .then((response) => {
     if (response.status === 200 && response.data) {
         return response.data.match(/CHARA_NAME = (\{[\w\W]+?\}\n\n)/)?.[1].split(/\n+/).map((e) => {
@@ -168,7 +171,8 @@ const replaceJjcName = async (html, nameData, namesPinyinData) => {
 const replacePicCdn = (html) => {
     const $ = (0, cheerio_1.load)(html);
     $('img[data-src]').map((i, e) => $(e).attr('data-src', $(e).attr('data-src')
-        .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
+        // eslint-disable-next-line max-len
+        .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', isDev ? './cdn/' : 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
     return $.html();
 };
 // 添加角色详情链接
@@ -294,7 +298,7 @@ const pc2m = async (html) => {
     // $('input.search').attr('data-page', 'm');
     return $('.pc-page').html();
 };
-const splitPage = (html, unitData) => {
+const splitPage = (html, unitData, namesData) => {
     const $ = (0, cheerio_1.load)(html);
     const pcPageMain = $('div.pc-page div.page.main').prop('outerHTML');
     const pcPageAllUnits = $('div.pc-page div.page.all-units').prop('outerHTML');
@@ -303,7 +307,7 @@ const splitPage = (html, unitData) => {
     const mPageAllUnits = $('div.m-page div.page.all-units').prop('outerHTML');
     const mPageAbout = $('div.m-page div.page.about').prop('outerHTML');
     // 首页
-    $('a[href="/index.html"]').addClass('active');
+    $('a[href="./index.html"]').addClass('active');
     $('div.pc-page').html(pcPageMain);
     $('div.m-page').html(mPageMain);
     $('body').append('<script pjax-data src="./index.min.js"></script>');
@@ -311,7 +315,7 @@ const splitPage = (html, unitData) => {
     $('script[pjax-data]').remove();
     // 全角色
     $('div.nav a').removeClass('active');
-    $('a[href="/all-units.html"]').addClass('active');
+    $('a[href="./all-units.html"]').addClass('active');
     $('div.pc-page').html(pcPageAllUnits);
     $('div.m-page').html(mPageAllUnits);
     $('body').append('<script pjax-data src="./all-units.min.js"></script>');
@@ -319,7 +323,7 @@ const splitPage = (html, unitData) => {
     $('script[pjax-data]').remove();
     // 娱乐榜单
     $('div.nav a').removeClass('active');
-    $('a[href="/entertainment.html"]').addClass('active');
+    $('a[href="./entertainment.html"]').addClass('active');
     $('div.pc-page').html(pcPageAllUnits);
     $('div.pc-page,div.m-page').find('thead th')
         .map((i, el) => {
@@ -351,7 +355,7 @@ const splitPage = (html, unitData) => {
         return el;
     });
     // eslint-disable-next-line max-len
-    const tbodyHtml = unitData.map((data) => `<tr><td title="${data.names?.join(' | ') || data.unit_name}" alt="${data.names?.[0] || data.unit_name}"><a class="unit-link" href="https://pcr.satroki.tech/unit/${data.unit_id}" target="_blank" one-link-mark="yes"><img src="./img/unknown.jpg" data-src="https://redive.estertion.win/icon/unit/${data.unit_id + 30}.webp" width="50px" height="50px" class="js-lazyload-fixed-size-img" alt="${data.names?.[0] || data.unit_name}"><br>${data.names?.[0] || data.unit_name}</a></td><td title="${data.age}" alt="${data.age}">${data.age}</td><td title="${data.height}" alt="${data.height}">${data.height}</td><td title="${data.weight}" alt="${data.weight}">${data.weight}</td><td title="${data.birth_month}月${data.birth_day}日" alt="${data.birth_month}${data.birth_day.toString().padStart(2, '0')}">${data.birth_month}月${data.birth_day}日</td><td title="${data.blood_type}" alt="${data.blood_type}">${data.blood_type}</td><td title="${data.search_area_width}" alt="${data.search_area_width}">${data.search_area_width}</td></tr>`).join('');
+    const tbodyHtml = unitData.map((data) => `<tr><td title="${data.names?.join(' | ') || data.unit_name}" alt="${data.names?.[0] || data.unit_name}" data-pinyin="${namesData[data.names?.[0] || 'NULL'] || ''}"><a class="unit-link" href="https://pcr.satroki.tech/unit/${data.unit_id}" target="_blank" one-link-mark="yes"><img src="./img/unknown.jpg" data-src="https://redive.estertion.win/icon/unit/${data.unit_id + 30}.webp" width="50px" height="50px" class="js-lazyload-fixed-size-img" alt="${data.names?.[0] || data.unit_name}"><br>${data.names?.[0] || data.unit_name}</a></td><td title="${data.age}" alt="${data.age}">${data.age}</td><td title="${data.height}" alt="${data.height}">${data.height}</td><td title="${data.weight}" alt="${data.weight}">${data.weight}</td><td title="${data.birth_month}月${data.birth_day}日" alt="${data.birth_month}${data.birth_day.toString().padStart(2, '0')}">${data.birth_month}月${data.birth_day}日</td><td title="${data.blood_type}" alt="${data.blood_type}">${data.blood_type}</td><td title="${data.search_area_width}" alt="${data.search_area_width}">${data.search_area_width}</td></tr>`).join('');
     $('div.pc-page,div.m-page').find('tbody')
         .html(tbodyHtml);
     $('body').append('<script pjax-data src="./entertainment.min.js"></script>');
@@ -359,7 +363,7 @@ const splitPage = (html, unitData) => {
     $('script[pjax-data]').remove();
     // 关于
     $('div.nav a').removeClass('active');
-    $('a[href="/about.html"]').addClass('active');
+    $('a[href="./about.html"]').addClass('active');
     $('div.pc-page').html(pcPageAbout);
     $('div.m-page').html(mPageAbout);
     $('body').append('<script pjax-data></script>');
@@ -411,7 +415,7 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
         });
         const namesData = {};
         const namesOnlyData = unitsData.map((unit) => unit.names || []).filter((e) => e.length > 0);
-        namesOnlyData.map((names) => namesData[names[0]] = (0, pinyin_pro_1.pinyin)(names[0], { toneType: 'num', type: 'array', nonZh: 'consecutive' }).join('|'));
+        namesOnlyData.map((names) => namesData[names[0]] = (0, pinyin_pro_1.pinyin)(names[0], { toneType: 'num', type: 'array', nonZh: 'removed' }).join('|'));
         const $ = (0, cheerio_1.load)(response.data);
         const newtiHtml = replaceText($('div.puri_newiti-table').html());
         const table = $('.puri_5col-table');
@@ -431,7 +435,7 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
         const finalPcHtml = replacePicCdn(fs.readFileSync('template.html').toString()
             .replace('__HTML__', html)
             .replace('__HTML2__', html2)
-            .replace('__NAMEDATA__', JSON.stringify(namesData))
+            .replace('__NAMEDATA__', JSON.stringify(namesOnlyData))
             .replaceAll('https://img.gamewith.jp/assets/images/common/transparent1px.png', './img/unknown.jpg')
             .replace('__UPDATETIME__', dayjs().tz('Asia/Shanghai')
             .format('YYYY-MM-DD HH:mm:ss'))
@@ -439,12 +443,10 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
             .replace('__ARCHIVEDDATE__', fs.readdirSync('docs/archived').map((e) => (fs.lstatSync(`docs/archived/${e}`).isDirectory() ? `<li><a href="/archived/${e}" target="_self">${e}</a></li>` : null))
             .filter((e) => e)
             .join('')));
-        // fs.writeFileSync('docs/test.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
-        const finalHtmls = splitPage(finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)), unitsData);
+        const finalHtmls = splitPage(finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)), unitsData, namesData);
         for (const [name, html] of Object.entries(finalHtmls)) {
             fs.writeFileSync(`docs/${name}.raw.html`, html);
         }
-        // fs.writeFileSync('docs/raw.html', finalPcHtml.replace('__MPAGE__', await pc2m(finalPcHtml)));
         for (let i = 0; i < 5; i++) { // eslint-disable-line
             if ((await downloadPic(html + html2)).filter((e) => !e).length === 0)
                 break;

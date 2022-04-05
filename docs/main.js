@@ -43,7 +43,7 @@ function sortPinyin(a, b) {
     const pingyinAText = pingyinA[i] || '';
     const pingyinBText = pingyinB[i] || '';
     if (pingyinAText === pingyinBText) continue;
-    return pingyinAText - pingyinBText;
+    return pingyinAText > pingyinBText ? -1 : 1;
   }
 }
 function sortRule(a, b) {
@@ -55,7 +55,7 @@ function sortRule(a, b) {
 
     return altNumA === altNumB ? sortPinyin(altNameA, altNameB) : altNumA - altNumB;
   }
-  return a - b;
+  return sortPinyin(a, b);
 }
 function sortRankItem(i, sort, init) {
   const allData = {};
@@ -73,7 +73,6 @@ function sortRankItem(i, sort, init) {
 
   $('table.sorttable:visible>tbody')[0].style.display = init ? 'none' : 'block';
   if (sort) {
-    console.log(Object.keys(allData).sort(sortRule));
     $('table.sorttable:visible>tbody')[0].innerHTML = Object.keys(allData).sort(sortRule)
       .map((e) => allData[e].outerHTML)
       .join('');

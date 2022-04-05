@@ -6,7 +6,8 @@
   "scripts": {
     "test": "npm start",
     "build": "tsc && node dist/getRank.js",
-    "start": "tsc && node dist/getRank.js && node src/build.js"
+    "start": "tsc && node dist/getRank.js && node src/build.js",
+    "dev": "tsc && node dist/getRank.js dev && node src/build.js"
   },
   "author": "HCLonely",
   "license": "MIT",

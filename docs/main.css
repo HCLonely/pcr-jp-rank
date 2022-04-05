@@ -390,7 +390,7 @@ canvas {
 }
 
 #loadingCharacter .charcter-container.char02 {
-  background-image: url("/img/sprite02.png");
+  background-image: url("./img/sprite02.png");
   animation: spriteAnime02 700ms steps(19) infinite;
 }
 
