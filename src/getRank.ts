@@ -195,9 +195,23 @@ const replaceJjcName = async (html: string, nameData: Array<Array<string>>, name
 // 替换图片链接为CDN连接
 const replacePicCdn = (html: string): string => {
   const $ = load(html);
-  $('img[data-src]').map((i, e) => $(e).attr('data-src', ($(e).attr('data-src') as string)
-    // eslint-disable-next-line max-len
-    .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', isDev ? './cdn/' : 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
+  $('img[data-src],img[src]').map((i, e) => {
+    if ($(e).attr('data-src')
+      ?.includes('https://img.gamewith.jp/article_tools/pricone-re/gacha/')) {
+      $(e).attr('data-src', ($(e).attr('data-src') as string)
+        // eslint-disable-next-line max-len
+        .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', isDev ? './cdn/' : 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/'));
+      return e;
+    }
+    if ($(e).attr('src')
+      ?.includes('https://img.gamewith.jp/article_tools/pricone-re/gacha/')) {
+      $(e).attr('src', ($(e).attr('src') as string)
+        // eslint-disable-next-line max-len
+        .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', isDev ? './cdn/' : 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/'));
+      return e;
+    }
+    return e;
+  });
   return $.html() as string;
 };
 
@@ -435,7 +449,11 @@ const downloadPic = (html: string): Promise<Array<boolean>> => {
   const $ = load(html);
   return Promise.all(
     $('img').toArray()
-      .map((e) => $(e).attr('data-src'))
+      // eslint-disable-next-line no-nested-ternary
+      .map((e) => ($(e).attr('data-src')
+        ?.includes('https://img.gamewith.jp/article_tools/pricone-re/gacha/') ? $(e).attr('data-src') :
+        ($(e).attr('src')
+          ?.includes('https://img.gamewith.jp/article_tools/pricone-re/gacha/') ? $(e).attr('src') : null)))
       .filter((e) => e)
       .map((e) => downloadFile(e as string, './docs/cdn'))
   )

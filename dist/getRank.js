@@ -170,9 +170,23 @@ const replaceJjcName = async (html, nameData, namesPinyinData) => {
 // 替换图片链接为CDN连接
 const replacePicCdn = (html) => {
     const $ = (0, cheerio_1.load)(html);
-    $('img[data-src]').map((i, e) => $(e).attr('data-src', $(e).attr('data-src')
-        // eslint-disable-next-line max-len
-        .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', isDev ? './cdn/' : 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/')));
+    $('img[data-src],img[src]').map((i, e) => {
+        if ($(e).attr('data-src')
+            ?.includes('https://img.gamewith.jp/article_tools/pricone-re/gacha/')) {
+            $(e).attr('data-src', $(e).attr('data-src')
+                // eslint-disable-next-line max-len
+                .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', isDev ? './cdn/' : 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/'));
+            return e;
+        }
+        if ($(e).attr('src')
+            ?.includes('https://img.gamewith.jp/article_tools/pricone-re/gacha/')) {
+            $(e).attr('src', $(e).attr('src')
+                // eslint-disable-next-line max-len
+                .replace('https://img.gamewith.jp/article_tools/pricone-re/gacha/', isDev ? './cdn/' : 'https://cdn.jsdelivr.net/gh/hclonely/pcr-jp-rank@main/docs/cdn/'));
+            return e;
+        }
+        return e;
+    });
     return $.html();
 };
 // 添加角色详情链接
@@ -398,7 +412,11 @@ const downloadFile = async (url, fileDir) => {
 const downloadPic = (html) => {
     const $ = (0, cheerio_1.load)(html);
     return Promise.all($('img').toArray()
-        .map((e) => $(e).attr('data-src'))
+        // eslint-disable-next-line no-nested-ternary
+        .map((e) => ($(e).attr('data-src')
+        ?.includes('https://img.gamewith.jp/article_tools/pricone-re/gacha/') ? $(e).attr('data-src') :
+        ($(e).attr('src')
+            ?.includes('https://img.gamewith.jp/article_tools/pricone-re/gacha/') ? $(e).attr('src') : null)))
         .filter((e) => e)
         .map((e) => downloadFile(e, './docs/cdn')));
 };

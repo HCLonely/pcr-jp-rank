@@ -6,10 +6,11 @@ const CleanCSS = require('clean-css');
 const { transformSync } = require('@babel/core');
 const autoprefixer = require('autoprefixer');
 const postcss = require('postcss');
+const sass = require('sass');
 
 (async () => {
 // 压缩 CSS
-  const cssText = fs.readFileSync('./docs/main.css').toString();
+  const { css: cssText } = sass.compile('./docs/main.scss');
   const cleanCssOptions = {
     compatibility: 'ie8'
   };

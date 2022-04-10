@@ -28,7 +28,7 @@ if (!execSync(`git tag -l "${version}"`).toString()) {
 }
 
 if (gitStatus.includes('docs/') || FORCE) {
-  fs.writeFileSync('docs/.gitignore', ['*.raw.html', '*.js', '*.css', '!*.min.js', '!*.min.css', 'sitemap.json'].join('\n'));
+  fs.writeFileSync('docs/.gitignore', ['*.raw.html', '*.js', '*.css', '*.scss', '!*.min.js', '!*.min.css', 'sitemap.json'].join('\n'));
   console.log(gitSpawn('git', ['init'], { cwd: 'docs' }));
   console.log(gitSpawn('git', ['rm', '-r', '--cached', '.'], { cwd: 'docs' }));
   console.log(gitSpawn('git', ['add', '-A'], { cwd: 'docs' }));
