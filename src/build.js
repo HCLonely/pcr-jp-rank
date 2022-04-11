@@ -15,7 +15,7 @@ const sass = require('sass');
     compatibility: 'ie8'
   };
   const postedCss = await postcss([autoprefixer])
-    .process(cssText, { from: './docs/main.css' })
+    .process(cssText, { from: './docs/main.scss' })
     .then((result) => result.css);
   const minedCssText = new CleanCSS(cleanCssOptions).minify(postedCss);
   fs.writeFileSync('./docs/main.min.css', minedCssText.styles);

@@ -1,6 +1,7 @@
-/* global $, lazyload, sortRankItem */
+/* global $, lazyload, sortRankItem, scrollbarStyle */
 $('table img').attr('onerror', 'this.onerror=null;this.src="./img/unknown.jpg"');
 lazyload(document.querySelectorAll('.js-lazyload-fixed-size-img'));
+scrollbarStyle();
 
 $('table.sorttable tbody').on('scroll', () => {
   if (document.body.scrollTop > 20 ||

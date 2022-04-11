@@ -112,6 +112,14 @@ div.right {
       background: #9de0f6;
     }
   }
+
+  table.sorttable {
+    thead.scrollbar {
+      width: -moz-calc(100% - 17px);
+      width: -webkit-calc(100% - 17px);
+      width: calc(100% - 17px);
+    }
+  }
 }
 
 .m-page {

@@ -93,7 +93,6 @@ module.exports = async () => {
     }
     return unit;
   });
-
   return JSON.parse(JSON.stringify(finalData).replaceAll('（', '(')
     .replaceAll('）', ')')
     .replaceAll('＆', '&')
