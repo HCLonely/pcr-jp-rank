@@ -486,7 +486,7 @@ axios.get('https://gamewith.jp/pricone-re/article/show/93068')
       // const updateTime = $('time[datetime]').attr('datetime');
       const html = await addLink(
         await replaceName(
-          formatHtml(newtiHtml, '新角色评价', 'new') +
+          formatHtml(newtiHtml, '新角色/专武评价', 'new') +
           formatHtml(tablePlus(allRank1Html, allRank2Html), '综合排行榜', 'all') +
           formatHtml(questHtml, '推图排行榜', 'quest'), namesOnlyData, namesData) +
           await replaceJjcName(
