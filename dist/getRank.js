@@ -444,7 +444,7 @@ axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
         const jjcHtml = replaceText($('div.puri_rank123-table').html());
         const hitiranHtml = replaceText($('div.puri_hitiran-table').html());
         // const updateTime = $('time[datetime]').attr('datetime');
-        const html = await addLink(await replaceName(formatHtml(newtiHtml, '新角色评价', 'new') +
+        const html = await addLink(await replaceName(formatHtml(newtiHtml, '新角色/专武评价', 'new') +
             formatHtml(tablePlus(allRank1Html, allRank2Html), '综合排行榜', 'all') +
             formatHtml(questHtml, '推图排行榜', 'quest'), namesOnlyData, namesData) +
             await replaceJjcName(formatJjcHtml(jjcHtml, '竞技场排行榜', 'jjc'), namesOnlyData, namesData) +
