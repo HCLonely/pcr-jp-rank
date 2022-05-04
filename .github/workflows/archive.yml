@@ -12,6 +12,11 @@ jobs:
     steps:
       - name: Checkout codes
         uses: actions/checkout@v2
+      - name: Set git identity
+        run : |
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git ls-files | while read file; do touch -d $(git log -1 --format="@%ct" "$file") "$file"; done
       - name: Use Node.js
         uses: actions/setup-node@v1
         with:
@@ -31,3 +36,8 @@ jobs:
         env:
           TZ: Asia/Shanghai
         run: node src/archive.js
+      - name: Push
+        env:
+          TZ: Asia/Shanghai
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        run: node src/pushDocs.js
