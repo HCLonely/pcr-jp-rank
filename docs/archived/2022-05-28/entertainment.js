@@ -1,5 +1,5 @@
 /* global $, lazyload, sortItem, scrollbarStyle */
-$('table img').attr('onerror', 'this.onerror=null;this.src="./img/unknown.jpg"');
+$('table img').attr('onerror', 'this.onerror=null;this.src="./2022-05-28/img/unknown.jpg"');
 lazyload(document.querySelectorAll('.js-lazyload-fixed-size-img'));
 scrollbarStyle();
 
