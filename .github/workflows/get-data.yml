@@ -33,6 +33,8 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
       - run: npm start
+        env:
+          LINK: ${{ secrets.LINK }}
       - name: Push
         env:
           TZ: Asia/Shanghai

@@ -421,7 +421,7 @@ const downloadPic = (html) => {
         .map((e) => downloadFile(e, './docs/cdn')));
 };
 // 获取并保存排行数据
-axios_1.default.get('https://gamewith.jp/pricone-re/article/show/93068')
+axios_1.default.get(process.env.LINK)
     .then(async (response) => {
     if (response.status === 200 && response.data) {
         const nameData = await getNameData();

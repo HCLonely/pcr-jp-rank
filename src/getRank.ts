@@ -460,7 +460,7 @@ const downloadPic = (html: string): Promise<Array<boolean>> => {
   ;
 };
 // 获取并保存排行数据
-axios.get('https://gamewith.jp/pricone-re/article/show/93068')
+axios.get(process.env.LINK as string)
   .then(async (response) => {
     if (response.status === 200 && response.data) {
       const nameData = await getNameData();
