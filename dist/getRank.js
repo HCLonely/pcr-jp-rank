@@ -130,6 +130,8 @@ const replaceName = async (html, nameData, namesPinyinData) => {
             .trim()
             .replace(/＆/g, '&');
         const nameArr = nameData.find((e) => e.includes(nameJp.replace('(6⭐)', '')));
+        if (nameJp === 'アキノ&サレン')
+            console.log(nameArr);
         if (nameArr) {
             $('td').eq(index)
                 .html($('td').eq(index)

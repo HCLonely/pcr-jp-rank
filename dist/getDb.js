@@ -18,15 +18,15 @@ const downloadUnitDb = async (server) => {
 };
 const getData = async (server) => {
     const currentVersion = fs.existsSync(`./unit-data/version_${server}.json`) ?
-        fs.readFileSync(`./unit-data/version_${server}.json`).toJSON().TruthVersion :
+        (JSON.parse(fs.readFileSync(`./unit-data/version_${server}.json`)).TruthVersion || 0) :
         0;
     const lastVersionInfo = (await axios.get(`https://redive.estertion.win/last_version_${server}.json`)).data;
     if (!lastVersionInfo) {
         return;
     }
     if (currentVersion < lastVersionInfo.TruthVersion) {
-        fs.writeFileSync(`./unit-data/version_${server}.json`, JSON.stringify(lastVersionInfo));
         await downloadUnitDb(server);
+        fs.writeFileSync(`./unit-data/version_${server}.json`, JSON.stringify(lastVersionInfo));
     }
     return;
 };
