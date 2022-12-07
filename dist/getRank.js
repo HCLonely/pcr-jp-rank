@@ -18,6 +18,8 @@ dayjs.extend(timezone);
 const textMap = JSON.parse(fs.readFileSync('text-map.json').toString());
 // 格式化Html
 const formatHtml = (html, title, className) => {
+    if (!html)
+        return '';
     const $ = (0, cheerio_1.load)(html);
     $('noscript').remove();
     $('td').find('br')
@@ -437,7 +439,11 @@ axios_1.default.get(process.env.LINK)
         const namesOnlyData = unitsData.map((unit) => unit.names || []).filter((e) => e.length > 0);
         namesOnlyData.map((names) => namesData[names[0]] = (0, pinyin_pro_1.pinyin)(names[0], { toneType: 'num', type: 'array', nonZh: 'removed' }).join('|'));
         const $ = (0, cheerio_1.load)(response.data);
-        const newtiHtml = replaceText($('div.puri_newiti-table').html());
+        const newtiEle = $('div.puri_newiti-table');
+        let newtiHtml = '';
+        if (newtiEle.length > 0) {
+            newtiHtml = replaceText($('div.puri_newiti-table').html());
+        }
         const table = $('.puri_5col-table');
         const allRank1Html = replaceText(table.eq(0).html());
         const allRank2Html = replaceText(table.eq(1).html());

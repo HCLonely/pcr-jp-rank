@@ -39,6 +39,7 @@ const textMap = JSON.parse(fs.readFileSync('text-map.json').toString());
 
 // 格式化Html
 const formatHtml = (html: string, title: string, className: string): string => {
+  if (!html) return '';
   const $ = load(html);
   $('noscript').remove();
   $('td').find('br')
@@ -476,7 +477,11 @@ axios.get(process.env.LINK as string)
       namesOnlyData.map((names) => namesData[names[0]] = pinyin(names[0], { toneType: 'num', type: 'array', nonZh: 'removed' }).join('|'));
 
       const $ = load(response.data);
-      const newtiHtml = replaceText($('div.puri_newiti-table').html() as string);
+      const newtiEle = $('div.puri_newiti-table');
+      let newtiHtml = '';
+      if (newtiEle.length > 0) {
+        newtiHtml = replaceText($('div.puri_newiti-table').html() as string);
+      }
       const table = $('.puri_5col-table');
       const allRank1Html = replaceText(table.eq(0).html() as string);
       const allRank2Html = replaceText(table.eq(1).html() as string);
